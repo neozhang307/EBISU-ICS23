@@ -30,7 +30,7 @@ double runTest(int width_x, int width_y, int iteration, int bdimx, int blkpsm, b
   jacobi_gold((REAL *)input, width_y, width_x, (REAL *)output);
   jacobi_gold_iterative((REAL *)input, width_y, width_x, (REAL *)output_gold, iteration);
 #else
-  int err = jacobi_iterative((REAL *)input, width_y, width_x, (REAL *)output, bdimx, blkpsm, iteration, async, usewarmup);
+  int err = jacobi_iterative((REAL *)input, width_y, width_x, (REAL *)output, bdimx, blkpsm, iteration, async, usewarmup, verbose);
   if (err == 1)
   {
     if (check)
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
   bool async = false;       // if use async copy deprecated
   bool usewarmup = false;   // if use warmup
   bool isExpriment = false; // the experiment setting in ICS23 paper
-
+  bool verbose = false;     // verbose output
   if (argc >= 3)
   {
     width_y = atoi(argv[1]);
@@ -115,11 +115,11 @@ int main(int argc, char *argv[])
   double error = 0;
   if (fp32)
   {
-    error = runTest<float>(width_x, width_y, iteration, bdimx, blkpsm, check, async, usewarmup);
+    error = runTest<float>(width_x, width_y, iteration, bdimx, blkpsm, check, async, usewarmup, verbose);
   }
   else
   {
-    error = runTest<double>(width_x, width_y, iteration, bdimx, blkpsm, check, async, usewarmup);
+    error = runTest<double>(width_x, width_y, iteration, bdimx, blkpsm, check, async, usewarmup, verbose);
   }
   if (error >= TOLERANCE)
   {
