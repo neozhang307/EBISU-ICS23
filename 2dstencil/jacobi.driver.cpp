@@ -80,14 +80,15 @@ int main(int argc, char *argv[])
   }
 
   CommandLineArgs args(argc, argv);
+
+  args.GetCmdLineArgument("bdim", bdimx);
+  args.GetCmdLineArgument("blkpsm", blkpsm);
+  args.GetCmdLineArgument("iter", iteration);
+
   fp32 = args.CheckCmdLineFlag("fp32");
   check = args.CheckCmdLineFlag("check");
   usewarmup = args.CheckCmdLineFlag("warmup");
   isExpriment = args.CheckCmdLineFlag("experiment");
-
-  args.GetCmdLineArgument("bdim", bdimx);
-  args.GetCmdLineArgument("iter", iteration);
-  args.GetCmdLineArgument("blkpsm", blkpsm);
 
   if (bdimx == 0)
     bdimx = 256;
