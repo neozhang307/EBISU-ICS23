@@ -14,7 +14,7 @@ const double TOLERANCE = 1e-5;
 #endif
 
 template <class REAL>
-double runTest(int width_x, int width_y, int iteration, int bdimx, int blkpsm, bool check, bool async, bool usewarmup)
+double runTest(int width_x, int width_y, int iteration, int bdimx, int blkpsm, bool check, bool async, bool usewarmup, bool verbose)
 {
   double error = 0;
   REAL(*input)
