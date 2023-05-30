@@ -5,17 +5,18 @@
 // Simple way to do warmup
 // Simple way to do iterative kernel launch.
 // Base class with virtual function of launch and warmup
-inline void for_each_argument_address(void**) {}
+inline void for_each_argument_address(void **) {}
 
 template <typename arg_t, typename... args_t>
-inline void for_each_argument_address(void** collected_addresses,
-                                      arg_t&& arg,
-                                      args_t&&... args) {
-  collected_addresses[0] = const_cast<void*>(static_cast<const void*>(&arg));
-  for_each_argument_address(collected_addresses + 1,
-                            ::std::forward<args_t>(args)...);
+inline void for_each_argument_address(void **collected_addresses,
+                                      arg_t &&arg,
+                                      args_t &&...args)
+{
+    collected_addresses[0] = const_cast<void *>(static_cast<const void *>(&arg));
+    for_each_argument_address(collected_addresses + 1,
+                              ::std::forward<args_t>(args)...);
 }
-template<bool useCooperativeLaunch=false>
+template <bool useCooperativeLaunch = false>
 class LaunchHelper
 {
 private:
@@ -27,11 +28,11 @@ public:
     LaunchHelper(int warmupaim = 350, int warmupiteration = 1000);
     ~LaunchHelper();
     template <typename Kernel_t, typename... Args>
-    void launch(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args&&... args);
+    void launch(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args &&...args);
     template <typename Kernel_t, typename... Args>
-    void warmup(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args&&...args);
+    void warmup(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args &&...args);
     template <typename Kernel_t, typename Function, typename... Args>
-    void warmup(Kernel_t kernel, Function func, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args&&...args);
+    void warmup(Kernel_t kernel, Function func, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args &&...args);
 };
 template <bool useCooperativeLaunch>
 LaunchHelper<useCooperativeLaunch>::LaunchHelper(int givenwarmupsec, int givenwarmupiteration)
@@ -45,13 +46,13 @@ LaunchHelper<useCooperativeLaunch>::~LaunchHelper()
 }
 template <bool useCooperativeLaunch>
 template <typename Kernel_t, typename... Args>
-void LaunchHelper<useCooperativeLaunch>::launch(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args&&... args)
+void LaunchHelper<useCooperativeLaunch>::launch(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args &&...args)
 {
-    if(useCooperativeLaunch)
+    if (useCooperativeLaunch)
     {
         constexpr const auto non_zero_num_params = sizeof...(Args) == 0 ? 1 : sizeof...(Args);
         void *argument_ptrs[non_zero_num_params];
-        for_each_argument_address(argument_ptrs,std::forward<Args>(args)...);
+        for_each_argument_address(argument_ptrs, std::forward<Args>(args)...);
         cudaLaunchCooperativeKernel(
             (void *)kernel, gdim, bdim, argument_ptrs, executesm, stream);
     }
@@ -59,11 +60,10 @@ void LaunchHelper<useCooperativeLaunch>::launch(Kernel_t kernel, dim3 gdim, dim3
     {
         kernel<<<gdim, bdim, executesm, stream>>>(std::forward<Args>(args)...);
     }
-    
 }
 template <bool useCooperativeLaunch>
 template <typename Kernel_t, typename... Args>
-void LaunchHelper<useCooperativeLaunch>::warmup(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args&&...args)
+void LaunchHelper<useCooperativeLaunch>::warmup(Kernel_t kernel, dim3 gdim, dim3 bdim, int executesm, cudaStream_t stream, Args &&...args)
 {
     cudaEvent_t warstart, warmstop;
     cudaEventCreate(&warstart);
@@ -121,4 +121,3 @@ void LaunchHelper<useCooperativeLaunch>::warmup(Kernel_t kernel, Function func, 
     cudaEventDestroy(warstart);
     cudaEventDestroy(warmstop);
 }
-
