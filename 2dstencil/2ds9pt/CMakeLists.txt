@@ -82,4 +82,4 @@ mylib("${type}_ebisu" "${CMAKE_SOURCE_DIR}/jacobi-temporal-traditional.cu" "${DE
 set_target_properties("${type}_ebisu" PROPERTIES CUDA_ARCHITECTURES "80")
 
 
-subcompile(${type} "${DEFAULT_COMPILER_FLAG} -D__PRINT__" "EBISU" SOURCE "${CMAKE_SOURCE_DIR}/jacobi-2d.cu"  DRIVER "${CMAKE_SOURCE_DIR}/jacobi.driver.cpp" LIB "${type}_ebisu" )
+subcompile(${type} "${DEFAULT_COMPILER_FLAG} " "EBISU" SOURCE "${CMAKE_SOURCE_DIR}/jacobi-2d.cu"  DRIVER "${CMAKE_SOURCE_DIR}/jacobi.driver.cpp" LIB "${type}_ebisu" )
