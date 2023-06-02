@@ -14,11 +14,11 @@ __global__ void kernel_temporal_traditional(REAL *__restrict__ input, int width_
                                             REAL *__var_4__)
 {
   // stencilParaT;
-  const REAL west[2]={12.0/118,9.0/118};
-  const REAL east[2]={12.0/118,9.0/118};
-  const REAL north[2]={5.0/118,7.0/118};
-  const REAL south[2]={5.0/118,7.0/118};
-  const REAL center=15.0/118;
+  const REAL west[2] = {12.0 / 118, 9.0 / 118};
+  const REAL east[2] = {12.0 / 118, 9.0 / 118};
+  const REAL north[2] = {5.0 / 118, 7.0 / 118};
+  const REAL south[2] = {5.0 / 118, 7.0 / 118};
+  const REAL center = 15.0 / 118;
 
   extern __shared__ char sm[];
 
@@ -71,9 +71,9 @@ __global__ void kernel_temporal_traditional(REAL *__restrict__ input, int width_
     __syncthreads();
 
     regEnqueue<REAL, sizeof_rbuffer, halo, 0>(sm_rbuffers, r_smbuffer[(LOCAL_DEPTH - 1)],
-                                                  0, sm_range_y,
-                                                  ps_x, (tid + rind_x) & (blockDim.x - 1),
-                                                  tile_x_with_halo);
+                                              0, sm_range_y,
+                                              ps_x, (tid + rind_x) & (blockDim.x - 1),
+                                              tile_x_with_halo);
 
     __syncthreads();
     smEnqueueAsync<REAL, halo + LOCAL_TILE_Y>(sm_rbuffers, sm_mqueue_index[LOCAL_DEPTH - 1], tid + ps_x, sm_range_y, tile_x_with_halo,
@@ -108,11 +108,10 @@ __global__ void kernel_temporal_traditional(REAL *__restrict__ input, int width_
       init_reg_array<REAL, LOCAL_TILE_Y>(sum[step], 0);
       // main stencil computation
       compute<REAL, LOCAL_TILE_Y, halo>(sum[step],
-                                             sm_rbuffers, sm_mqueue_index[step], sm_range_y,
-                                             0, (local_x + rind_x), tile_x_with_halo, blockDim.x,
-                                             r_smbuffer[step], halo,
-                                             west, east, north, south, center
-                                             );
+                                        sm_rbuffers, sm_mqueue_index[step], sm_range_y,
+                                        0, (local_x + rind_x), tile_x_with_halo, blockDim.x,
+                                        r_smbuffer[step], halo,
+                                        west, east, north, south, center);
     }
     // Lazy enqueue for next tiling in the following time steps.
     regEnqueues<REAL, LOCAL_DEPTH, LOCAL_TILE_Y * 2 + 2 * halo, LOCAL_TILE_Y, LOCAL_TILE_Y + 2 * halo, 0, LOCAL_TILE_Y>(r_smbuffer, sum);
@@ -132,7 +131,7 @@ __global__ void kernel_temporal_traditional(REAL *__restrict__ input, int width_
                                 global_y - (LOCAL_TILE_Y + halo) * (LOCAL_DEPTH - 1),
                                 LOCAL_TILE_Y);
     }
-    // sync the prefetch 
+    // sync the prefetch
     __pipeline_wait_prior(0);
     // lazy streaming can reduce the amount of synchronization to only one synchronization.
     __syncthreads();

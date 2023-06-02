@@ -45,12 +45,14 @@ template<>
 struct timesteps< 1,  box_shape,  4,  double>
 {
   static int const val = 6;
+  // static int const val = 2;
 };
 
 template<>
 struct timesteps< 1,  box_shape,  8,  float>
 {
   static int const val = 8;//7;
+  // static int const val = 1;//7;
 };
 
 template<>

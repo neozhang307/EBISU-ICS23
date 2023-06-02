@@ -30,6 +30,24 @@ __device__ void __forceinline__ regEnqueues(REAL d_queue[DEPTH][DQUEUE_SIZE],REA
   }
 }
 
+
+template<class REAL, int REG_SIZE, int SIZE, int halo, int reg_base>
+__device__ void __forceinline__ regsEnqueues(REAL* sm_queue, REAL reg_queue[2*halo+1][REG_SIZE],
+                                      int y_base, int y_range,
+                                      int x_base, int x_id,
+                                      int sm_width)
+{
+  _Pragma("unroll")
+  for(int l_x=0; l_x<halo*2+1; l_x++)
+  {
+    _Pragma("unroll")
+    for(int l_y=0; l_y<SIZE ; l_y++)
+    {
+      reg_queue[l_x][l_y+reg_base] = sm_queue[((l_y+y_base)&(y_range-1))*sm_width+x_base+x_id+l_x-halo];//input[(global_y) * width_x + global_x];
+    }
+  }
+}
+
 template<class REAL, int DEPTH, int QUEUE_SIZE,  int SHUFFLE_DISTANCE, int SHUFFLE_RANGE, int LAST_SHUFFLE_RANGE>
 __device__ void __forceinline__ regShuffle(REAL reg_mqueues[DEPTH][QUEUE_SIZE])
 {
@@ -50,6 +68,24 @@ __device__ void __forceinline__ regShuffle(REAL reg_mqueues[DEPTH][QUEUE_SIZE])
   }
 }
 
+
+template<class REAL, int DEPTH, int QUEUE_SIZE_Y, int QUEUE_SIZE_X,  int SHUFFLE_RANGE, int SHUFFLE_DISTANCE>
+__device__ void __forceinline__ regShuffle(REAL reg_mqueues[DEPTH][QUEUE_SIZE_Y][QUEUE_SIZE_X])
+{
+  _Pragma("unroll") for (int step = 0; step < DEPTH; step++)
+  {
+    _Pragma("unroll")
+    for(int l_x=0; l_x<QUEUE_SIZE_Y; l_x++)
+    {
+      _Pragma("unroll")
+      for(int l_y=0; l_y<SHUFFLE_RANGE; l_y++)
+      {
+        reg_mqueues[step][l_x][l_y+0]=reg_mqueues[step][l_x][l_y+SHUFFLE_DISTANCE];
+      }
+    }
+  }
+}
+
 template<class REAL, int DEPTH, int SHUFFLE_DISTANCE>
 __device__ void __forceinline__ smShuffle(int sm_mqueue_index[DEPTH],int sm_tile_range_y)
 {
@@ -58,6 +94,9 @@ __device__ void __forceinline__ smShuffle(int sm_mqueue_index[DEPTH],int sm_tile
     sm_mqueue_index[i] = (sm_mqueue_index[i] + SHUFFLE_DISTANCE) & (sm_tile_range_y - 1);
   }
 }
+
+
+
 
 template<class REAL, int RANGE>
 __device__ void __forceinline__ smEnqueueAsync (REAL* sm_queue, 
@@ -180,6 +219,48 @@ __device__ void __forceinline__ compute(REAL result[RESULT_SIZE],
     for(int l_y=0; l_y<RESULT_SIZE ; l_y++)
     {
       result[l_y]+=r_ptr[reg_base+l_y+1+hl]*north[hl];
+    }
+  }
+}
+
+
+
+template<class REAL, int RESULT_SIZE, int halo, int CACHESIZE=(RESULT_SIZE+2*halo)>
+__device__ void __forceinline__ computation_box(REAL result[RESULT_SIZE], 
+                                            REAL* sm_ptr, 
+                                            int sm_y_base, int sm_y_range, int sm_x_ind,int sm_width, 
+                                            REAL r_ptr[2*halo+1][CACHESIZE],
+                                            int reg_base, 
+                                            const REAL filter[halo*2+1][halo*2+1]
+                                          )
+{
+
+  _Pragma("unroll")\
+  for(int hl_y=-halo; hl_y<=halo; hl_y++)
+  {
+    _Pragma("unroll")
+    for(int hl_x=-halo; hl_x<0; hl_x++)
+    {
+      _Pragma("unroll")
+      for(int l_y=0; l_y<RESULT_SIZE ; l_y++)
+      {
+        result[l_y]+=filter[hl_y+halo][hl_x+halo]*r_ptr[hl_x+halo][hl_y+halo+l_y];
+      }
+    }
+
+    _Pragma("unroll")
+    for(int l_y=0; l_y<RESULT_SIZE ; l_y++)
+    {
+      result[l_y]+=filter[hl_y+halo][0+halo]*r_ptr[0+halo][hl_y+reg_base+l_y];
+    }
+    _Pragma("unroll")
+    for(int hl_x=1; hl_x<=halo; hl_x++)
+    {
+      _Pragma("unroll")
+      for(int l_y=0; l_y<RESULT_SIZE ; l_y++)
+      {
+        result[l_y]+=filter[hl_y+halo][hl_x+halo]*r_ptr[hl_x+halo][hl_y+halo+l_y];
+      }
     }
   }
 }

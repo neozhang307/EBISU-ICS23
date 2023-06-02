@@ -89,6 +89,7 @@ int main(int argc, char *argv[])
   check = args.CheckCmdLineFlag("check");
   usewarmup = args.CheckCmdLineFlag("warmup");
   isExpriment = args.CheckCmdLineFlag("experiment");
+  verbose = args.CheckCmdLineFlag("verbose");
 
   if (bdimx == 0)
     bdimx = 256;

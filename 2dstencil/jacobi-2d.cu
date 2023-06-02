@@ -119,12 +119,9 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   size_t sharememory_basic = (basic_sm_space) * sizeof(REAL);
   executeSM = sharememory_basic;
 
-  int smrange = pow(2, ceil(log((RTILE_Y * 2 + HALO) + (RTILE_Y + HALO) * (TSTEP - 1)) / log(2)));
-#ifdef BOX
-  executeSM = smrange * sizeof(REAL) * (bdimx + 2 * HALO) + sizeof(REAL);
-#else
-  executeSM = smrange * sizeof(REAL) * (bdimx) + sizeof(REAL); 
-#endif
+  int smrange = pow(2, ceil(log((RTILE_Y * 2 + HALO ) + (RTILE_Y + HALO) * (TSTEP - 1)) / log(2)));
+
+  executeSM = smrange * sizeof(REAL) * (bdimx + 2 * isBox) + sizeof(REAL);
 
   int numBlocksPerSm_current = 1000;
 
