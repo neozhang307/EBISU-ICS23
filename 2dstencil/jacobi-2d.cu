@@ -13,13 +13,13 @@
 #include "./common/printHelper.hpp"
 
 
-#if defined(TRATEMPORAL)
+#if defined(EBISU)
 #define TRADITIONLAUNCH
 #endif
 #if defined(TEMPORAL)
 #define PERSISTENTLAUNCH
 #endif
-#if defined PERSISTENTLAUNCH || defined(TRATEMPORAL)
+#if defined PERSISTENTLAUNCH || defined(EBISU)
 #define PERSISTENTTHREAD
 #endif
 
@@ -53,7 +53,7 @@ void host_printptx(int &result)
 template <class REAL>
 void getExperimentSetting(int *iteration, int *widthy, int *widthx, int bdimx)
 {
-#if defined(TEMPORAL) || defined(TRATEMPORAL)
+#if defined(EBISU)
   constexpr int RTILE_Y = (ipts<HALO, curshape, REAL>::val);
   iteration[0] = timesteps<HALO, curshape, RTILE_Y, REAL>::val;
   widthy[0] = widthx[0] = (bdimx - 2 * iteration[0] * HALO) * 36;
