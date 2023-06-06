@@ -82,7 +82,7 @@ __forceinline__ void exchangeio(REAL*&i, int width_x, int width_y, REAL*&o)
 
 template <class REAL>
 int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
-                     int bdimx, int blkpsm, int iteration, bool async,
+                     int bdimx, int blkpsm, int iteration,
                      bool usewarmup, bool verbose)
 {
   /*************************************/
@@ -177,7 +177,7 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   PrintHelper myPrinter((int)verbose);
   myPrinter.PrintPtx(ptx);
   myPrinter.PrintDataType(sizeof(REAL));
-  myPrinter.PrintAsync(async);
+  // myPrinter.PrintAsync(async);
   myPrinter.PrintDomain(width_x, width_y);
   myPrinter.PrintIteration(iteration);
   myPrinter.PrintBlockDim(executeBlockDim.x);
@@ -215,8 +215,8 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
 }
 
 template int jacobi_iterative<float>(float *h_input, int width_y, int width_x, float *__var_0__,
-                                     int bdimx, int blkpsm, int iteration, bool async,
+                                     int bdimx, int blkpsm, int iteration,
                                      bool usewarmup, bool verbose);
 template int jacobi_iterative<double>(double *h_input, int width_y, int width_x, double *__var_0__,
-                                      int bdimx, int blkpsm, int iteration, bool async,
+                                      int bdimx, int blkpsm, int iteration,
                                       bool usewarmup, bool verbose);

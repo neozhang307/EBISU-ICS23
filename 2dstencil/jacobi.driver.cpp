@@ -14,7 +14,7 @@ const double TOLERANCE = 1e-5;
 #endif
 
 template <class REAL>
-double runTest(int width_x, int width_y, int iteration, int bdimx, int blkpsm, bool check, bool async, bool usewarmup, bool verbose)
+double runTest(int width_x, int width_y, int iteration, int bdimx, int blkpsm, bool check, bool usewarmup, bool verbose)
 {
   double error = 0;
   REAL(*input)
@@ -30,7 +30,7 @@ double runTest(int width_x, int width_y, int iteration, int bdimx, int blkpsm, b
   jacobi_gold((REAL *)input, width_y, width_x, (REAL *)output);
   jacobi_gold_iterative((REAL *)input, width_y, width_x, (REAL *)output_gold, iteration);
 #else
-  int err = jacobi_iterative((REAL *)input, width_y, width_x, (REAL *)output, bdimx, blkpsm, iteration, async, usewarmup, verbose);
+  int err = jacobi_iterative((REAL *)input, width_y, width_x, (REAL *)output, bdimx, blkpsm, iteration, usewarmup, verbose);
   if (err == 1)
   {
     if (check)
@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
   int bdimx = 256;          // block dim deprecated
   int blkpsm = 0;           // block per stream multiprocessor
 
-  bool async = false;       // if use async copy deprecated
   bool usewarmup = false;   // if use warmup
   bool isExpriment = false; // the experiment setting in ICS23 paper
   bool verbose = false;     // verbose output
@@ -116,11 +115,11 @@ int main(int argc, char *argv[])
   double error = 0;
   if (fp32)
   {
-    error = runTest<float>(width_x, width_y, iteration, bdimx, blkpsm, check, async, usewarmup, verbose);
+    error = runTest<float>(width_x, width_y, iteration, bdimx, blkpsm, check, usewarmup, verbose);
   }
   else
   {
-    error = runTest<double>(width_x, width_y, iteration, bdimx, blkpsm, check, async, usewarmup, verbose);
+    error = runTest<double>(width_x, width_y, iteration, bdimx, blkpsm, check, usewarmup, verbose);
   }
   if (error >= TOLERANCE)
   {
