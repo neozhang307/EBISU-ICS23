@@ -20,7 +20,7 @@ public:
     void PrintSmRange(int smRange, int smRangeRequest);
     // void PrintRunTime (float elapsedTimed);
     void PrintPerformance(int width_x, int width_y, int iteration, int halo, int flopspercell, float elapsedTimed);
-    void PrintPerformance(int width_x, int width_y,int height_z, int iteration, int halo, int flopspercell, float elapsedTimed);
+    void PrintPerformance(int width_x, int width_y, int height_z, int iteration, int halo, int flopspercell, float elapsedTimed);
     void PirntFinish();
     // void PrintAll(int ptx, int dataSize, bool async, int width_x, int width_y, int iteration, int bdim, int validtb, int gdimx, int gdimy, int gdimz, double blkpsm, double smemSize, int smRange, int smRangeRequest, float elapsedTimed);
 private:
@@ -94,8 +94,7 @@ void PrintHelper::PrintDomain(int width_x, int width_y, int height_z)
     }
     else
     {
-        printf("%d\t%d\t%d\t", width_x, width_y, height_z
-        );
+        printf("%d\t%d\t%d\t", width_x, width_y, height_z);
     }
 }
 
@@ -146,7 +145,6 @@ void PrintHelper::PrintILP(int ilp)
     }
 }
 
-
 void PrintHelper::PrintValidThreadBlockTiling(int validtb)
 {
     if (verbase > 0)
@@ -187,7 +185,7 @@ void PrintHelper::PrintSharedMemory(double assigned, double smemSize)
 {
     if (verbase > 0)
     {
-        printf("[FORMA] Shared memory: %f/%f KB\n", assigned,smemSize);
+        printf("[FORMA] Shared memory: %f/%f KB\n", assigned, smemSize);
     }
     else
     {
@@ -227,13 +225,13 @@ void PrintHelper::PrintPerformance(int width_x, int width_y, int height_z, int i
     if (verbase > 0)
     {
         printf("[FORMA] Performance (ms) : %f \n", elapsedTimed);
-        printf("[FORMA] Performance (GCells/s) : %f \n", (double)(width_x) * (width_y)*(height_z)*iteration / elapsedTimed / 1000 / 1000);
+        printf("[FORMA] Performance (GCells/s) : %f \n", (double)(width_x) * (width_y) * (height_z)*iteration / elapsedTimed / 1000 / 1000);
         printf("[FORMA] Valid Performance (GCells/s): %f \n", (double)(width_x - 2 * halo) * (width_y - 2 * halo) * (height_z - 2 * halo) * iteration / elapsedTimed / 1000 / 1000);
     }
     else
     {
         printf("%f\t", (double)elapsedTimed);
-        printf("%f\t", (double)(width_x - 2 * halo) * (width_y - 2 * halo) *  (height_z - 2 * halo) * iteration / elapsedTimed / 1000 / 1000);
+        printf("%f\t", (double)(width_x - 2 * halo) * (width_y - 2 * halo) * (height_z - 2 * halo) * iteration / elapsedTimed / 1000 / 1000);
     }
 }
 void PrintHelper::PirntFinish()

@@ -14,9 +14,6 @@
 #include "../share/printHelper.hpp"
 #include "../share/launchHelper.cuh"
 
-
-
-
 namespace cg = cooperative_groups;
 
 #define cudaCheckError()                                                               \
@@ -50,20 +47,18 @@ void getExperimentSetting(int *iteration, int *widthy, int *widthx, int bdimx)
   constexpr int RTILE_Y = (ipts<HALO, curshape, REAL>::val);
   iteration[0] = timesteps<HALO, curshape, RTILE_Y, REAL>::val;
   widthy[0] = widthx[0] = (bdimx - 2 * iteration[0] * HALO) * 36;
-
 }
 template void getExperimentSetting<double>(int *, int *, int *, int);
 template void getExperimentSetting<float>(int *, int *, int *, int);
 
-
-/// @brief 
-/// @tparam REAL 
-/// @param i 
-/// @param width_x 
-/// @param width_y 
-/// @param o 
+/// @brief
+/// @tparam REAL
+/// @param i
+/// @param width_x
+/// @param width_y
+/// @param o
 template <class REAL>
-__forceinline__ void exchangeio(REAL*&i, int width_x, int width_y, REAL*&o)
+__forceinline__ void exchangeio(REAL *&i, int width_x, int width_y, REAL *&o)
 {
   REAL *tmp = i;
   i = o;
@@ -82,7 +77,8 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   bdimx = ((bdimx == 128) ? 128 : 256);
   int ptx;
   host_printptx(ptx);
-  if (blkpsm <= 0)blkpsm = 100;
+  if (blkpsm <= 0)
+    blkpsm = 100;
   auto execute_kernel = kernel_temporal_traditional<REAL, HALO>;
 
   int sm_count;
@@ -109,7 +105,7 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   size_t sharememory_basic = (basic_sm_space) * sizeof(REAL);
   executeSM = sharememory_basic;
 
-  int smrange = pow(2, ceil(log((RTILE_Y * 2 + HALO ) + (RTILE_Y + HALO) * (TSTEP - 1)) / log(2)));
+  int smrange = pow(2, ceil(log((RTILE_Y * 2 + HALO) + (RTILE_Y + HALO) * (TSTEP - 1)) / log(2)));
 
   executeSM = smrange * sizeof(REAL) * (bdimx + 2 * isBox) + sizeof(REAL);
 
@@ -132,11 +128,11 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   dim3 executeBlockDim = block_dim;
   dim3 executeGridDim = grid_dim;
 
-  LaunchHelper<false> myLauncher=LaunchHelper<false>();
+  LaunchHelper<false> myLauncher = LaunchHelper<false>();
   if (usewarmup)
   {
-    myLauncher.warmup(execute_kernel, exchangeio<REAL>,executeGridDim, executeBlockDim, executeSM,0,
-      __var_1__, width_y, width_x, __var_2__);
+    myLauncher.warmup(execute_kernel, exchangeio<REAL>, executeGridDim, executeBlockDim, executeSM, 0,
+                      __var_1__, width_y, width_x, __var_2__);
   }
 
   cudaEvent_t _forma_timer_start_, _forma_timer_stop_;
@@ -145,19 +141,18 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   cudaEventRecord(_forma_timer_start_, 0);
 
   {
-    myLauncher.launch(execute_kernel, executeGridDim, executeBlockDim, executeSM,0,
-      input, width_y, width_x, __var_2__);
+    myLauncher.launch(execute_kernel, executeGridDim, executeBlockDim, executeSM, 0,
+                      input, width_y, width_x, __var_2__);
 
     for (int i = TSTEP; i < iteration; i += TSTEP)
     {
-      myLauncher.launch(execute_kernel, executeGridDim, executeBlockDim, executeSM,0,
-        __var_2__, width_y, width_x, __var_1__);
+      myLauncher.launch(execute_kernel, executeGridDim, executeBlockDim, executeSM, 0,
+                        __var_2__, width_y, width_x, __var_1__);
       REAL *tmp = __var_2__;
       __var_2__ = __var_1__;
       __var_1__ = tmp;
     }
   }
-
 
   cudaEventRecord(_forma_timer_stop_, 0);
   cudaEventSynchronize(_forma_timer_stop_);
@@ -174,7 +169,7 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   myPrinter.PrintGridDim(executeGridDim.x, executeGridDim.y, executeGridDim.z);
   myPrinter.PrintBlockPerSM((double)(executeGridDim.x) * (executeGridDim.y) / sm_count,
                             numBlocksPerSm_current);
-  myPrinter.PrintSharedMemory(executeSM/1024.0, SharedMemoryUsed / 1024.0);
+  myPrinter.PrintSharedMemory(executeSM / 1024.0, SharedMemoryUsed / 1024.0);
   myPrinter.PrintSmRange(smrange, (RTILE_Y * 2 + HALO) + (RTILE_Y + HALO) * (TSTEP - 1));
   myPrinter.PrintPerformance(width_x, width_y, iteration, HALO, FPC, elapsedTime);
   myPrinter.PirntFinish();
@@ -182,7 +177,7 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   cudaEventDestroy(_forma_timer_start_);
   cudaEventDestroy(_forma_timer_stop_);
 
-// finalization
+  // finalization
   cudaDeviceSynchronize();
   cudaCheckError();
 
