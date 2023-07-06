@@ -15,15 +15,7 @@
 #include "../share/launchHelper.cuh"
 
 
-#if defined(EBISU)
-#define TRADITIONLAUNCH
-#endif
-#if defined(TEMPORAL)
-#define PERSISTENTLAUNCH
-#endif
-#if defined PERSISTENTLAUNCH || defined(EBISU)
-#define PERSISTENTTHREAD
-#endif
+
 
 namespace cg = cooperative_groups;
 
@@ -54,14 +46,11 @@ void host_printptx(int &result)
 template <class REAL>
 void getExperimentSetting(int *iteration, int *widthy, int *widthx, int bdimx)
 {
-#if defined(EBISU)
+
   constexpr int RTILE_Y = (ipts<HALO, curshape, REAL>::val);
   iteration[0] = timesteps<HALO, curshape, RTILE_Y, REAL>::val;
   widthy[0] = widthx[0] = (bdimx - 2 * iteration[0] * HALO) * 36;
-#else
-  iteration[0] = 1;
-  widthy[0] = widthx[0] = 8192;
-#endif
+
 }
 template void getExperimentSetting<double>(int *, int *, int *, int);
 template void getExperimentSetting<float>(int *, int *, int *, int);
@@ -197,14 +186,9 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
 // finalization
   cudaDeviceSynchronize();
   cudaCheckError();
-#if defined(GEN) || defined(GENWR) || defined(PERSISTENT)
-  if (iteration % 2 == 1)
-    cudaMemcpy(__var_0__, __var_2__, sizeof(REAL) * ((width_y - 0) * (width_x - 0)), cudaMemcpyDeviceToHost);
-  else
-    cudaMemcpy(__var_0__, input, sizeof(REAL) * ((width_y - 0) * (width_x - 0)), cudaMemcpyDeviceToHost);
-#else
+
   cudaMemcpy(__var_0__, __var_2__, sizeof(REAL) * ((width_y - 0) * (width_x - 0)), cudaMemcpyDeviceToHost);
-#endif
+
   /*Kernel Launch End */
   /* Host Free Begin */
   cudaFree(input);
