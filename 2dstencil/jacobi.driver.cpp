@@ -60,7 +60,6 @@ int main(int argc, char *argv[])
   int width_x;
   int width_y;
   int iteration = 3;
-  int warmupiteration = -1;
   width_x = width_y = 2048; // 4096;
   bool fp32 = true;         // float
   bool check = false;       // compare result with CPU
