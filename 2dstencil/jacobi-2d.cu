@@ -167,7 +167,6 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   PrintHelper myPrinter((int)verbose);
   myPrinter.PrintPtx(ptx);
   myPrinter.PrintDataType(sizeof(REAL));
-  // myPrinter.PrintAsync(async);
   myPrinter.PrintDomain(width_x, width_y);
   myPrinter.PrintIteration(iteration);
   myPrinter.PrintBlockDim(executeBlockDim.x);
@@ -175,7 +174,7 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   myPrinter.PrintGridDim(executeGridDim.x, executeGridDim.y, executeGridDim.z);
   myPrinter.PrintBlockPerSM((double)(executeGridDim.x) * (executeGridDim.y) / sm_count,
                             numBlocksPerSm_current);
-  myPrinter.PrintSharedMemory(SharedMemoryUsed / 1024.0);
+  myPrinter.PrintSharedMemory(executeSM/1024.0, SharedMemoryUsed / 1024.0);
   myPrinter.PrintSmRange(smrange, (RTILE_Y * 2 + HALO) + (RTILE_Y + HALO) * (TSTEP - 1));
   myPrinter.PrintPerformance(width_x, width_y, iteration, HALO, FPC, elapsedTime);
   myPrinter.PirntFinish();
