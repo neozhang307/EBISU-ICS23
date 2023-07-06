@@ -10,7 +10,9 @@
 #include "./common/jacobi_cuda.cuh"
 #include "./common/cuda_common.cuh"
 #include "./common/cuda_computation.cuh"
-#include "./common/printHelper.hpp"
+
+#include "../share/printHelper.hpp"
+#include "../share/launchHelper.cuh"
 
 
 #if defined(EBISU)
@@ -49,7 +51,6 @@ void host_printptx(int &result)
   cudaFree(d_r);
 }
 
-#include "./common/launchHelper.cuh"
 template <class REAL>
 void getExperimentSetting(int *iteration, int *widthy, int *widthx, int bdimx)
 {
