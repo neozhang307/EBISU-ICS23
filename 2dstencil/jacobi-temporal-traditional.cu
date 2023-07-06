@@ -115,6 +115,7 @@ __global__ void kernel_temporal_traditional(REAL *__restrict__ input, int width_
     }
     // Lazy enqueue for next tiling in the following time steps.
     regEnqueues<REAL, LOCAL_DEPTH, LOCAL_TILE_Y * 2 + 2 * halo, LOCAL_TILE_Y, LOCAL_TILE_Y + 2 * halo, 0, LOCAL_TILE_Y>(r_smbuffer, sum);
+    __syncthreads();
     smEnqueues<REAL, LOCAL_DEPTH, LOCAL_TILE_Y, LOCAL_TILE_Y>(sm_rbuffers, sm_mqueue_index, 0, ((tid + rind_x) & (blockDim.x - 1)) + ps_x, sm_range_y, tile_x_with_halo, sum);
     // shuffle
     {
