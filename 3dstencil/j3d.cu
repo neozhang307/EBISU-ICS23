@@ -1,16 +1,13 @@
 
-#ifdef _TIMER_
-#include "cuda_profiler_api.h"
-#endif
+
 #include <cuda.h>
 #include "stdio.h"
 #include <cooperative_groups.h>
 #include "stdio.h"
 #include "assert.h"
 #include "config.cuh"
-#include <cstring>
+
 #include "./common/jacobi_cuda.cuh"
-#include "./common/types.hpp"
 #include "./common/cuda_common.cuh"
 #include "./common/cuda_computation.cuh"
 #include "./common/temporalconfig.cuh"
@@ -53,8 +50,8 @@ void getExperimentSetting(int *iteration, int *height, int *widthy, int *widthx,
   widthx[0] = 12 * TILE_X;
   widthy[0] = 9 * TILE_Y;
   height[0] = 2560;
-
 }
+
 template void getExperimentSetting<double>(int *, int *, int *, int *, int);
 template void getExperimentSetting<float>(int *, int *, int *, int *, int);
 
@@ -68,7 +65,6 @@ int j3d_iterative(REAL *h_input,
                   bool usewarmup,
                   bool verbose)
 {
-
   LaunchHelper<true> myLauncher = LaunchHelper<true>();
   int TSTEP = timesteps<HALO, curshape, ITEM_PER_THREAD, REAL>::val;
 
@@ -80,8 +76,7 @@ int j3d_iterative(REAL *h_input,
   int TILE_Y = LOCAL_ITEM_PER_THREAD * global_bdimx / TILE_X;
   assert(TILE_Y <= TILE_X);
 
-  if (blkpsm <= 0)
-    blkpsm = 100;
+  if (blkpsm <= 0) blkpsm = 100;
 
   int sm_count;
   cudaDeviceGetAttribute(&sm_count, cudaDevAttrMultiProcessorCount, 0);
@@ -159,10 +154,6 @@ int j3d_iterative(REAL *h_input,
   cudaCtxResetPersistingL2Cache();
   cudaStreamSynchronize(0);
 
-  int p_y_real_gpu_begin_0 = 0;
-  int p_y_valid_gpu_begin_0 = TSTEP * HALO;
-  int p_y_valid_gpu_end_0 = p_y_valid_gpu_begin_0 + width_y - TSTEP * HALO;
-
   cudaCheckError();
 
   if (usewarmup)
@@ -170,7 +161,6 @@ int j3d_iterative(REAL *h_input,
     myLauncher.warmup(execute_kernel, executeGridDim, executeBlockDim, executeSM, 0,
                       __var_2__, __var_1__,
                       height, width_y, width_x,
-                      p_y_valid_gpu_begin_0, p_y_valid_gpu_end_0, p_y_real_gpu_begin_0,
                       l2_cache1, l2_cache2);
   }
 
@@ -182,7 +172,6 @@ int j3d_iterative(REAL *h_input,
   myLauncher.launch(execute_kernel, executeGridDim, executeBlockDim, executeSM, 0,
                     input, __var_2__,
                     height, width_y, width_x,
-                    p_y_valid_gpu_begin_0, p_y_valid_gpu_end_0, p_y_real_gpu_begin_0,
                     l2_cache1, l2_cache2);
 
   for (int i = TSTEP; i < iteration; i += TSTEP)
@@ -190,7 +179,6 @@ int j3d_iterative(REAL *h_input,
     myLauncher.launch(execute_kernel, executeGridDim, executeBlockDim, executeSM, 0,
                       __var_2__, __var_1__,
                       height, width_y, width_x,
-                      p_y_valid_gpu_begin_0, p_y_valid_gpu_end_0, p_y_real_gpu_begin_0,
                       l2_cache1, l2_cache2);
 
     REAL *tmp = __var_2__;

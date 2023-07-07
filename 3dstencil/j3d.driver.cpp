@@ -119,9 +119,9 @@ int main(int argc, char **argv)
 #endif
   if (argc >= 3)
   {
-    height = atoi(argv[1]);
+    width_x = atoi(argv[1]);
     width_y = atoi(argv[2]);
-    width_x = atoi(argv[3]);
+    height = atoi(argv[3]);
 
     height = height <= 0 ? 256 : height;
     width_x = width_x <= 0 ? 256 : width_x;
