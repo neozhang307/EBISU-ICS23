@@ -32,7 +32,7 @@ kernel3d_temporal(REAL *__restrict__ input,
                   REAL *l2_cache_i, REAL *l2_cache_o)
 {
   
-static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star, 2: box
+static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    
 
   int gdim_y = (BLOCKDIM / LOCAL_TILE_X);
   const int tile_x_with_halo = LOCAL_TILE_X + 2 * halo;
@@ -77,16 +77,16 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
 
   cg::grid_group gg = cg::this_grid();
   {
-    int block_p_y = p_y;
+    // int p_y = p_y;
     smEnqueueAsync<REAL, 1 + halo>(sm_mque + SIZEOFSM - 1 - SMQUESIZE,
                                    ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
                                    input,
-                                   p_z - (QUESIZE) * (MQSIZE - 1), block_p_y, p_x,
+                                   p_z - (QUESIZE) * (MQSIZE - 1), p_y, p_x,
                                    width_z, width_y, width_x);
 
     regEnqueues<REAL, halo, LOCAL_ITEM_PER_THREAD>(reg_mque,
                                                    input,
-                                                   p_z -  (QUESIZE) * (MQSIZE - 1) - halo, index_y + block_p_y, p_x + tid_x,
+                                                   p_z -  (QUESIZE) * (MQSIZE - 1) - halo, index_y + p_y, p_x + tid_x,
                                                    width_z, width_y, width_x);
     __pipeline_wait_prior(0);
     __syncthreads();
@@ -99,7 +99,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
         smEnqueueAsync<REAL, 1>(sm_mque + SIZEOFSM - 1,
                                 ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
                                 input,
-                                global_z + QUESIZE, block_p_y, p_x,
+                                global_z + QUESIZE, p_y, p_x,
                                 width_z, width_y, width_x);
       }
 
@@ -129,8 +129,10 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
       smEnqueues<REAL, MQSIZE,1, SIZEOFSM, LOCAL_ITEM_PER_THREAD, QUESIZE>(
           sm_mque, ps_y + index_y, ps_x + tid_x, tile_x_with_halo, tile_y_with_halo, sum);
 
-      //   // south
-      if (tid_y == 0)
+     
+      // PERKS-like handling tb dependency
+       //   // south
+       if (tid_y == 0)
       {
         _Pragma("unroll") for (int step = 1; step < MQSIZE; step++)
         {
@@ -178,13 +180,13 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
       if (global_z2 >= p_z && global_z2 < p_z_end && global_z2 < width_z)
       {
         store<REAL, LOCAL_ITEM_PER_THREAD>(output,
-                                           global_z2, block_p_y + index_y, p_x + tid_x, width_z, width_y, width_x, sum[0]);
+                                           global_z2, p_y + index_y, p_x + tid_x, width_z, width_y, width_x, sum[0]);
       }
 
       // only need to consider boundary
       // west
       __syncthreads();
-
+      // PERKS-like handling tb dependency
       if (tid_y == 1)
       {
         if (tid_x < LOCAL_TILE_Y)
@@ -234,6 +236,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
       l2_cache_i = l2_cache_o;
       l2_cache_o = tmp_ptr;
       __pipeline_wait_prior(0);
+      // PERKS-like handling tb dependency
       // //south
       if (tid_y == 0)
       {

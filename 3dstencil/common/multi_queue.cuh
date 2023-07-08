@@ -11,6 +11,20 @@ __device__ void __forceinline__ regEnqueue(REAL reg_que[RANGE],
     }
 }
 
+
+template <class REAL, int TILE_Y, int TILE_X>
+__device__ void __forceinline__ regEnqueue(REAL reg_que[TILE_Y][TILE_X],
+                                           REAL *sm_queue,
+                                           int sm_tile_y_ind, int sm_tile_x_ind, int tile_y_with_halo, int tile_x_with_halo)
+{
+    _Pragma("unroll") for (int l_y = 0; l_y < TILE_Y; l_y++)
+    {
+       _Pragma("unroll") for (int l_x = 0; l_x < TILE_X; l_x++)
+        {
+            reg_que[l_y][l_x] = sm_queue[(sm_tile_y_ind + l_y) * tile_x_with_halo + sm_tile_x_ind+l_x];
+        }
+    }
+}
 /// Load data from gm to register
 /// @tparam REAL data type
 /// @tparam RANGE range of the shared memory indexs for the multiqueue
@@ -60,6 +74,29 @@ __device__ void __forceinline__ regShuffle(REAL reg_mqueues[REG_MQSIZE][REG_Q_SI
         }
     }
 }
+
+template <class REAL, int MQSIZE, int REGQUESIZE, int  REG_Q_RANGE, int SHUFFLE_RANGE, int SHUFFLE_DISTANCE, int TILE_Y, int TILE_X>
+__device__ void __forceinline__ regShuffle(REAL reg_mqueues[REG_Q_RANGE][TILE_Y][TILE_X])
+{
+    _Pragma("unroll")
+    for(int l_z=0; l_z<MQSIZE ; l_z++)
+    {
+        _Pragma("unroll")
+        for(int l_hz=0; l_hz<SHUFFLE_RANGE; l_hz++)
+        {
+            _Pragma("unroll")
+            for(int l_y=0; l_y<TILE_Y; l_y++)
+            {
+                _Pragma("unroll")
+                for(int l_x=0; l_x<TILE_X ; l_x++)
+                {
+                    reg_mqueues[l_hz+l_z*(REGQUESIZE)][l_y][l_x]=reg_mqueues[l_hz+SHUFFLE_DISTANCE+l_z*(REGQUESIZE)][l_y][l_x];
+                }
+        }
+        }
+    }
+}
+
 
 /// Load data from gm to register
 /// @tparam REAL data type
@@ -160,6 +197,18 @@ __device__ void __forceinline__ smEnqueues(REAL *sm_queueindex[SM_RANGE],
         {
             sm_queueindex[SM_RANGE - (step) * (QUEUE_SIZE)-1][(sm_tile_y_ind + l_y) * tile_x_with_halo + sm_tile_x_ind] = regQueues[MQSIZE*REGQSIZE - step][l_y];
         }
+    }
+}
+
+template <class REAL, int TILE_Y>
+__device__ void __forceinline__ smEnqueue(REAL *sm_que,
+                                           int sm_tile_y_ind, int sm_tile_x_ind, int tile_x_with_halo, int tile_y_with_halo,
+                                           REAL reg_que[TILE_Y])
+{
+   _Pragma("unroll")
+    for(int l_y=0; l_y<TILE_Y; l_y++)
+    {
+        sm_que[(sm_tile_y_ind+l_y)*tile_x_with_halo+sm_tile_x_ind]=reg_que[l_y];
     }
 }
 
