@@ -88,8 +88,8 @@ int j3d_iterative(REAL *h_input,
 
   // shared memory related
   size_t executeSM = 0;
-  int smrange = (1 + HALO * 1) * TSTEP + 1;
-  int basic_sm_space = ((TILE_Y + 2 * HALO) * (TILE_X + HALO * 2) * ((1 + HALO * 1) * TSTEP + 1) + 1) * sizeof(REAL);
+  int smrange = (quesize<HALO, curshape>::smque) * TSTEP + 1;
+  int basic_sm_space = ((TILE_Y + 2 * HALO) * (TILE_X + HALO * 2) * smrange )* sizeof(REAL);
 
   executeSM = basic_sm_space;
 
