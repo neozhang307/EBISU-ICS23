@@ -13,3 +13,4 @@ template<class REAL>
 void j3d_gold_iterative(REAL*, int, int, int, REAL*, int );
 
 
+#endif
