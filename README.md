@@ -18,5 +18,5 @@ stencil used some code from the following repository:
 - Unit test & data generation: https://github.com/pssrawat/IEEE2017
 - Shared memory optimizations: https://github.com/naoyam/benchmarks
 
-## Cite PERKS:
+## Cite EBISU:
 Lingqi Zhang, Mohamed Wahib, Peng Chen, Jintao Meng, Xiao Wang, Toshio Endo, and Satoshi Matsuoka. 2023. Revisiting Temporal Blocking Stencil Optimizations. In Proceedings of the 37th International Conference on Supercomputing (ICS '23). Association for Computing Machinery, New York, NY, USA, 251–263. https://doi.org/10.1145/3577193.3593716
