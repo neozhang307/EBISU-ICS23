@@ -1,5 +1,4 @@
 #include "../common/common.hpp"
-#include "../common/types.hpp"
 #include "../common/jacobi_reference.hpp"
 
 // #ifndef REAL
@@ -70,4 +69,11 @@ void j3d_gold
   delete[] temp;
 }
 
-PERKS_INITIALIZE_ALL_TYPE(PERKS_DECLARE_INITIONIZATION_REFERENCE);
+template
+void j3d_gold<double>
+(double *l_input, int height, int width_y, int width_x, double* l_output);
+
+
+template
+void j3d_gold<float>
+(float *l_input, int height, int width_y, int width_x, float* l_output);
