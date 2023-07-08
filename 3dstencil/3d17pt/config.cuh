@@ -25,4 +25,5 @@ static constexpr int const curshape = 2; // 1: star, 2: box 3: type0  4: poisson
           }\
         };
 
-        
+
+
