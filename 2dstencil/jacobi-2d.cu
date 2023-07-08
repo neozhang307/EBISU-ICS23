@@ -164,6 +164,7 @@ int jacobi_iterative(REAL *h_input, int width_y, int width_x, REAL *__var_0__,
   myPrinter.PrintDataType(sizeof(REAL));
   myPrinter.PrintDomain(width_x, width_y);
   myPrinter.PrintIteration(iteration);
+  myPrinter.PrintIteration(TSTEP);
   myPrinter.PrintBlockDim(executeBlockDim.x);
   myPrinter.PrintValidThreadBlockTiling(valid_dimx);
   myPrinter.PrintGridDim(executeGridDim.x, executeGridDim.y, executeGridDim.z);
