@@ -90,7 +90,6 @@ int main(int argc, char **argv)
   fp32 = args.CheckCmdLineFlag("fp32");
   check = args.CheckCmdLineFlag("check");
   usewarmup = args.CheckCmdLineFlag("warmup");
-  usesmall = args.CheckCmdLineFlag("small");
   isExpriment = args.CheckCmdLineFlag("experiment");
   verbose = args.CheckCmdLineFlag("verbose");
 
