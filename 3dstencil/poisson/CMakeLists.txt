@@ -79,7 +79,7 @@ endfunction()
 
 
 
-mylib("${type}_ebisu" "${CMAKE_SOURCE_DIR}/j3d-temporal.cu" "${DEFAULT_COMPILER_FLAG}  ")
+mylib("${type}_ebisu" "${CMAKE_SOURCE_DIR}/j3d-temporal-box.cu" "${DEFAULT_COMPILER_FLAG}  ")
 set_target_properties("${type}_ebisu" PROPERTIES CUDA_ARCHITECTURES "80")
 
 subcompile(${type} "${DEFAULT_COMPILER_FLAG}  -D__PRINT__" "EBISU" SOURCE "${CMAKE_SOURCE_DIR}/j3d.cu" DRIVER "${CMAKE_SOURCE_DIR}/j3d.driver.cpp" LIB "${type}_ebisu" )
