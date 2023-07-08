@@ -12,9 +12,19 @@
 
 namespace cg = cooperative_groups;
 
+
+// template<class REAL, int halo, int blockdim=256, 
+//   int tilex=ipts<halo,curshape,REAL>::tile_x, 
+//   int ipt=ipts<halo,curshape,REAL>::val, 
+//   int tiley=ipt*blockdim/tilex,
+//   int mqsize=timesteps<halo,curshape,ipt,REAL>::val, 
+//   int quesize=halo+1,
+//   int sizeofsm=quesize*mqsize+1, int sizeofreg=quesize*mqsize>
+
 template <class REAL, int halo, int BLOCKDIM, int LOCAL_TILE_X, 
       int LOCAL_ITEM_PER_THREAD,  int LOCAL_TILE_Y, 
-       int MQSIZE, int QUESIZE,
+       int MQSIZE, 
+       int SMQUESIZE, int REGQUESIZE, int QUESIZE,
       int SIZEOFSM, int SIZEOFREG>
 __global__ void
 kernel3d_temporal(REAL *__restrict__ input,
@@ -69,7 +79,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
   cg::grid_group gg = cg::this_grid();
   {
     int block_p_y = p_y;
-    smEnqueueAsync<REAL, 1 + halo>(sm_mque + SIZEOFSM - 1 - halo - 1,
+    smEnqueueAsync<REAL, 1 + halo>(sm_mque + SIZEOFSM - 1 - SMQUESIZE,
                                    ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
                                    input,
                                    p_z - (QUESIZE) * (MQSIZE - 1), block_p_y, p_x,
@@ -102,16 +112,16 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
         init_reg_array<REAL, LOCAL_ITEM_PER_THREAD>(sum[MQSIZE - step], 0);
 
         regEnqueue<REAL, LOCAL_ITEM_PER_THREAD>(
-            reg_mque[SIZEOFREG - step * (QUESIZE) + halo],
-            sm_mque[SIZEOFSM - (step) * (QUESIZE) - 1],
+            reg_mque[SIZEOFREG - step * (REGQUESIZE) + halo],
+            sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 1],
             ps_y + index_y, ps_x + tid_x,
             tile_y_with_halo, tile_x_with_halo);
 
         // main computation
         computation<REAL, LOCAL_ITEM_PER_THREAD, halo, REG_Y_SIZE_MOD>(sum[MQSIZE - step],
-                                                                       sm_mque + SIZEOFSM - (step) * (QUESIZE) - 1,
+                                                                       sm_mque + SIZEOFSM - (step) * (SMQUESIZE) - 1,
                                                                        ps_y + index_y, tile_x_with_halo, tid_x + ps_x,
-                                                                       reg_mque + SIZEOFREG - step * (halo + 1),
+                                                                       reg_mque + SIZEOFREG - step * REGQUESIZE,
                                                                        west,east,north,south,top,bottom,center);
       }
       // star version can use multi-buffer to remove the necessarity of two sync
@@ -189,7 +199,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
                          (blockIdx.x * halo + l_x) * width_y +
                          c_y + tid_x] =
                   sm_mque
-                      [SIZEOFSM - (step) * (QUESIZE) - 1]
+                      [SIZEOFSM - (step) * (SMQUESIZE) - 1]
                       [(ps_y + tid_x) * tile_x_with_halo + ps_x + l_x];
             }
           }
@@ -209,7 +219,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
                          (blockIdx.x * halo + l_x) * width_y +
                          c_y + tid_x] =
                   sm_mque
-                      [SIZEOFSM - (step) * (QUESIZE) - 1]
+                      [SIZEOFSM - (step) * (SMQUESIZE) - 1]
                       [(ps_y + tid_x) * tile_x_with_halo + l_x + LOCAL_TILE_X];
             }
           }
@@ -219,7 +229,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
       gg.sync();
 
       smShuffle<REAL, SIZEOFSM, 1>(sm_mque);
-      regShuffle<REAL, MQSIZE, SIZEOFREG, QUESIZE,REG_Y_SIZE_MOD,  1, halo>(reg_mque);
+      regShuffle<REAL, MQSIZE, SIZEOFREG, REGQUESIZE,REG_Y_SIZE_MOD,  1, halo>(reg_mque);
 
       REAL *tmp_ptr = l2_cache_i;
       l2_cache_i = l2_cache_o;
@@ -234,8 +244,8 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
           {
             _Pragma("unroll") for (int l_y = 0; l_y < halo; l_y++)
             {
-              sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2][tile_x_with_halo * (l_y) + tid_x + ps_x] =
-                  (sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2][tile_x_with_halo * (ps_y) + tid_x + ps_x]);
+              sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (l_y) + tid_x + ps_x] =
+                  (sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (ps_y) + tid_x + ps_x]);
             }
           }
         }
@@ -245,7 +255,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
           {
             _Pragma("unroll") for (int l_y = 0; l_y < halo; l_y++)
             {
-              __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2] + tile_x_with_halo * (l_y) + tid_x + ps_x,
+              __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2] + tile_x_with_halo * (l_y) + tid_x + ps_x,
                                       l2_cache_i +
                                           step_north +
                                           (((step - 1) * gridDim.z + blockIdx.z)) * gridDim.y * halo * width_x +
@@ -265,8 +275,8 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
           {
             _Pragma("unroll") for (int l_y = 0; l_y < halo; l_y++)
             {
-              sm_mque[SIZEOFSM - (step) * (halo + 1) - 2][tile_x_with_halo * (l_y + LOCAL_TILE_Y + ps_y) + tid_x + ps_x] =
-                  (sm_mque[SIZEOFSM - (step) * (halo + 1) - 2][tile_x_with_halo * (LOCAL_TILE_Y + ps_y) + tid_x + ps_x]);
+              sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (l_y + LOCAL_TILE_Y + ps_y) + tid_x + ps_x] =
+                  (sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (LOCAL_TILE_Y + ps_y) + tid_x + ps_x]);
             }
           }
         }
@@ -276,7 +286,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
           {
             _Pragma("unroll") for (int l_y = 0; l_y < halo; l_y++)
             {
-              __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2] + tile_x_with_halo * (l_y + LOCAL_TILE_Y + ps_y) + tid_x + ps_x,
+              __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2] + tile_x_with_halo * (l_y + LOCAL_TILE_Y + ps_y) + tid_x + ps_x,
                                       l2_cache_i +
                                           step_south +
                                           (((step - 1) * gridDim.z + blockIdx.z)) * gridDim.y * halo * width_x +
@@ -299,8 +309,8 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
             {
               _Pragma("unroll") for (int l_x = 0; l_x < halo; l_x++)
               {
-                sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2][tile_x_with_halo * (l_y + ps_y) + l_x] =
-                    (sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2][tile_x_with_halo * (l_y + ps_y)]);
+                sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (l_y + ps_y) + l_x] =
+                    (sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (l_y + ps_y)]);
               }
             }
           }
@@ -310,7 +320,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
             {
               _Pragma("unroll") for (int l_x = 0; l_x < halo; l_x++)
               {
-                __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2] + tile_x_with_halo * (l_y + ps_y) + l_x,
+                __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2] + tile_x_with_halo * (l_y + ps_y) + l_x,
                                         l2_cache_i +
                                             step_east +
                                             ((step - 1) * gridDim.z + blockIdx.z) * gridDim.x * halo * width_y +
@@ -334,8 +344,8 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
             {
               _Pragma("unroll") for (int l_x = 0; l_x < halo; l_x++)
               {
-                sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2][tile_x_with_halo * (l_y + ps_y) + l_x + LOCAL_TILE_X + ps_x] =
-                    (sm_mque[SIZEOFSM - (step) * (QUESIZE) - 2][tile_x_with_halo * (l_y + ps_y) + LOCAL_TILE_X + ps_x]);
+                sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (l_y + ps_y) + l_x + LOCAL_TILE_X + ps_x] =
+                    (sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2][tile_x_with_halo * (l_y + ps_y) + LOCAL_TILE_X + ps_x]);
               }
             }
           }
@@ -345,7 +355,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;    // 1: star
             {
               _Pragma("unroll") for (int l_x = 0; l_x < halo; l_x++)
               {
-                __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (halo + 1) - 2] + tile_x_with_halo * (l_y + ps_y) + l_x + LOCAL_TILE_X + ps_x,
+                __pipeline_memcpy_async(sm_mque[SIZEOFSM - (step) * (SMQUESIZE) - 2] + tile_x_with_halo * (l_y + ps_y) + l_x + LOCAL_TILE_X + ps_x,
                                         l2_cache_i +
                                             step_west +
                                             ((step - 1) * gridDim.z + blockIdx.z) * gridDim.x * halo * width_y +
