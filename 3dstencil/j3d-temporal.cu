@@ -18,9 +18,8 @@ namespace cg = cooperative_groups;
 //   int ipt=ipts<halo,curshape,REAL>::val, 
 //   int tiley=ipt*blockdim/tilex,
 //   int mqsize=timesteps<halo,curshape,ipt,REAL>::val, 
-//   int quesize=halo+1,
-//   int sizeofsm=quesize*mqsize+1, int sizeofreg=quesize*mqsize>
-
+//   int smquesize=halo+1, int regquesize=halo+1 , int quesize=halo+1, 
+//   int sizeofsm=smquesize*mqsize+1, int sizeofreg=regquesize*mqsize>
 template <class REAL, int halo, int BLOCKDIM, int LOCAL_TILE_X, 
       int LOCAL_ITEM_PER_THREAD,  int LOCAL_TILE_Y, 
        int MQSIZE, 
