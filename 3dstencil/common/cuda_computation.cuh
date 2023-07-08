@@ -6,8 +6,8 @@
 template<int halo, int shape>
 struct quesize
 {
-  static int const que = 1+halo*2;
-  static int const smque = 1+halo*2;
+  static int const que = 1*2+halo;
+  static int const smque = 1*2+halo;
   static int const regque = 1+halo;// in afraid of register pressure, shrink the regque size
 
 };
@@ -31,7 +31,7 @@ template<class REAL, int halo, int blockdim=256,
   int smquesize=quesize<halo,curshape>::smque,//halo+1, 
   int regquesize=quesize<halo,curshape>::regque,
   int quesize=quesize<halo,curshape>::que,
-  int sizeofsm=smquesize*mqsize+1, int sizeofreg=regquesize*mqsize>
+  int sizeofsm=smquesize*mqsize+(curshape==1), int sizeofreg=regquesize*mqsize>
 __global__ void kernel3d_temporal(REAL* __restrict__ input, REAL* output,
                                   int height, int width_y, int width_x, 
                                   REAL * l2_cache_i, REAL * l2_cache_o); 

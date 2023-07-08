@@ -60,7 +60,6 @@ int j3d_iterative(REAL *h_input,
   static constexpr int const ITEM_PER_THREAD = (ipts<HALO, curshape, REAL>::val);
   LaunchHelper<true> myLauncher = LaunchHelper<true>();
   int TSTEP = timesteps<HALO, curshape, ITEM_PER_THREAD, REAL>::val;
-
   const int LOCAL_ITEM_PER_THREAD = ITEM_PER_THREAD;
   global_bdimx = global_bdimx == 128 ? 128 : 256;
 
@@ -81,7 +80,8 @@ int j3d_iterative(REAL *h_input,
 
   // shared memory related
   size_t executeSM = 0;
-  int smrange = (quesize<HALO, curshape>::smque) * TSTEP + 1;
+  int smrange = (quesize<HALO, curshape>::smque) * TSTEP + (curshape==1);
+  // int smrange = (HALO+1) * TSTEP + 1;
   int basic_sm_space = ((TILE_Y + 2 * HALO) * (TILE_X + HALO * 2) * smrange )* sizeof(REAL);
 
   executeSM = basic_sm_space;

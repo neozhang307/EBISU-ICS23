@@ -6,7 +6,7 @@
 static constexpr int const HALO = 1;     // rad or halo
 static constexpr int const FPC = 38;     // flops per cell
 static constexpr int const isBox = HALO; // 0: star, HALO: box
-static constexpr int const curshape = 2; // 1: star, 2: box 
+static constexpr int const curshape = 4; // 1: star, 2: box 
 
 // todo haven't figure out a better way to pass parameter
 
