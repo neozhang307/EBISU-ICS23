@@ -42,3 +42,5 @@
 
 # Output
 ptx_version SizeofData width_x width_y height iteration depth bdim ilp <gridx, gridy, gridz> block_per_sm shared_mem_used shared_mem_range runtime(ms) performance(GCells/s)
+
+Use verbose for detailed output
