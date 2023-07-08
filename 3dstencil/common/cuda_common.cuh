@@ -29,7 +29,15 @@ extern __host__ __device__ __forceinline__ int MAX(int a, int b) { return a > b 
 extern __host__ __device__ __forceinline__ int MIN(int a, int b) { return a < b ? a : b; }
 extern __host__ __device__ __forceinline__ int CEIL(int a, int b) { return ( (a) % (b) == 0 ? (a) / (b) :  ( (a) / (b) + 1 ) ); }
 
-
+#define cudaCheckError()                                                               \
+  {                                                                                    \
+    cudaError_t e = cudaGetLastError();                                                \
+    if (e != cudaSuccess)                                                              \
+    {                                                                                  \
+      printf("Cuda failure %s:%d: '%s'\n", __FILE__, __LINE__, cudaGetErrorString(e)); \
+    }                                                                                  \
+  }
+  
 #define Check_CUDA_Error(message) \
   do{\
     cudaError_t error = cudaGetLastError();\

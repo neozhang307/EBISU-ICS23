@@ -16,16 +16,7 @@
 #include "../share/printHelper.hpp"
 #include "../share/launchHelper.cuh"
 
-#define ITEM_PER_THREAD (ipts<HALO, curshape, REAL>::val)
 
-#define cudaCheckError()                                                               \
-  {                                                                                    \
-    cudaError_t e = cudaGetLastError();                                                \
-    if (e != cudaSuccess)                                                              \
-    {                                                                                  \
-      printf("Cuda failure %s:%d: '%s'\n", __FILE__, __LINE__, cudaGetErrorString(e)); \
-    }                                                                                  \
-  }
 
 __global__ void printptx(int *result)
 {
@@ -43,6 +34,7 @@ void host_printptx(int &result)
 template <class REAL>
 void getExperimentSetting(int *iteration, int *height, int *widthy, int *widthx, int bdimx)
 {
+  static constexpr int const ITEM_PER_THREAD = (ipts<HALO, curshape, REAL>::val);
   int TSTEP = timesteps<HALO, curshape, ITEM_PER_THREAD, REAL>::val;
   int TILE_X = ipts<HALO, curshape, REAL>::tile_x;
   int TILE_Y = ipts<HALO, curshape, REAL>::val * bdimx / TILE_X;
@@ -65,6 +57,7 @@ int j3d_iterative(REAL *h_input,
                   bool usewarmup,
                   bool verbose)
 {
+  static constexpr int const ITEM_PER_THREAD = (ipts<HALO, curshape, REAL>::val);
   LaunchHelper<true> myLauncher = LaunchHelper<true>();
   int TSTEP = timesteps<HALO, curshape, ITEM_PER_THREAD, REAL>::val;
 
