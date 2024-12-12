@@ -8,9 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 #start
 add_subdirectory(3d7pt)
-add_subdirectory(3d13pt)
+# add_subdirectory(3d13pt)
 
 #box
-add_subdirectory(3d17pt)
+# add_subdirectory(3d17pt)
 add_subdirectory(3d27pt)
-add_subdirectory(poisson)
+# add_subdirectory(poisson)
