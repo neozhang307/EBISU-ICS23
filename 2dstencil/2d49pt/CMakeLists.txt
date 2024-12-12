@@ -56,14 +56,14 @@ function(subcompile prefix default_compiler_flag aim)
     add_library(${libraryname} ${LOCAL_SOURCE})
     set_target_properties(${libraryname} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
     set_target_properties(${libraryname} PROPERTIES COMPILE_FLAGS "${local_compiler_flag} ")
-    set_target_properties(${libraryname} PROPERTIES CUDA_ARCHITECTURES "80")
+    set_target_properties(${libraryname} PROPERTIES CUDA_ARCHITECTURES "80;90")
     target_link_libraries(${libraryname} PUBLIC ${LOCAL_LIB} ${prefix}_jacobi_gold ${prefix}_jacobi_gold_gen ${CUDA_LIBRARIES})
 
 
     add_executable(${local_goal} ${LOCAL_DRIVER})
     set_target_properties(${local_goal}
                       PROPERTIES LANGUAGES CUDA LINKER_LANGUAGE CUDA)
-    set_target_properties("${local_goal}" PROPERTIES CUDA_ARCHITECTURES "80")
+    set_target_properties("${local_goal}" PROPERTIES CUDA_ARCHITECTURES "80;90")
     set_target_properties(${local_goal} PROPERTIES COMPILE_FLAGS "${local_compiler_flag}")
     set_target_properties(${local_goal} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
@@ -79,7 +79,7 @@ endfunction()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 mylib("${type}_ebisu" "${CMAKE_SOURCE_DIR}/jacobi-temporal-traditional-box.cu" "${DEFAULT_COMPILER_FLAG} ${COMPILECG}  -DTRATEMPORAL")
-set_target_properties("${type}_ebisu" PROPERTIES CUDA_ARCHITECTURES "80")
+set_target_properties("${type}_ebisu" PROPERTIES CUDA_ARCHITECTURES "80;90")
 
 
 subcompile(${type} "${DEFAULT_COMPILER_FLAG} -D__PRINT__" "EBISU" SOURCE "${CMAKE_SOURCE_DIR}/jacobi-2d.cu"  DRIVER "${CMAKE_SOURCE_DIR}/jacobi.driver.cpp" LIB "${type}_ebisu" )
