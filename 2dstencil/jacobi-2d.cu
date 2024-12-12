@@ -43,10 +43,20 @@ void host_printptx(int &result)
 template <class REAL>
 void getExperimentSetting(int *iteration, int *widthy, int *widthx, int bdimx)
 {
-
+  int basic=36;
+  int arch;
+  host_printptx(arch);
+  if(arch==800)
+  {
+    basic=36;
+  }
+  else if(arch==900)
+  {
+    basic=33;
+  }
   constexpr int RTILE_Y = (ipts<HALO, curshape, REAL>::val);
   iteration[0] = timesteps<HALO, curshape, RTILE_Y, REAL>::val;
-  widthy[0] = widthx[0] = (bdimx - 2 * iteration[0] * HALO) * 36;
+  widthy[0] = widthx[0] = (bdimx - 2 * iteration[0] * HALO) * basic;
 }
 template void getExperimentSetting<double>(int *, int *, int *, int);
 template void getExperimentSetting<float>(int *, int *, int *, int);
