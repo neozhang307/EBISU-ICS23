@@ -10,10 +10,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 #star
 add_subdirectory(2d5pt)
-add_subdirectory(2ds9pt)
+#add_subdirectory(2ds9pt)
 
 #box
 add_subdirectory(2d9pt)
-add_subdirectory(2d25pt)
+#add_subdirectory(2d25pt)
 add_subdirectory(2d49pt)
 
