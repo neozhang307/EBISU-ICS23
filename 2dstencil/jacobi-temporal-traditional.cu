@@ -14,10 +14,10 @@ __global__ void kernel_temporal_traditional(REAL *__restrict__ input, int width_
                                             REAL *__var_4__)
 {
   // stencilParaT;
-  const REAL west[2] = {12.0 / 118, 9.0 / 118};
-  const REAL east[2] = {12.0 / 118, 9.0 / 118};
-  const REAL north[2] = {5.0 / 118, 7.0 / 118};
-  const REAL south[2] = {5.0 / 118, 7.0 / 118};
+  const REAL west[3] = {12.0 / 118, 9.0 / 118, 9.0 / 118};
+  const REAL east[3] = {12.0 / 118, 9.0 / 118, 9.0 / 118};
+  const REAL north[3] = {5.0 / 118, 7.0 / 118, 7.0 / 118};
+  const REAL south[3] = {5.0 / 118, 7.0 / 118, 7.0 / 118};
   const REAL center = 15.0 / 118;
 
   extern __shared__ char sm[];
