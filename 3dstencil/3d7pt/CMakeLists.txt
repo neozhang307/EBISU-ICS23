@@ -24,7 +24,7 @@ target_link_libraries(${reference_goal} PUBLIC
 set_target_properties(${reference_goal} PROPERTIES
                             COMPILE_FLAGS " -DREFCHECK ")     
                             
-set_target_properties("${reference_goal}" PROPERTIES CUDA_ARCHITECTURES "80")
+set_target_properties("${reference_goal}" PROPERTIES CUDA_ARCHITECTURES "80;90")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -60,13 +60,13 @@ function(subcompile prefix default_compiler_flag aim)
     add_library(${libraryname} ${LOCAL_SOURCE})
     set_target_properties(${libraryname} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
     set_target_properties(${libraryname} PROPERTIES COMPILE_FLAGS "${local_compiler_flag} ")
-    set_target_properties(${libraryname} PROPERTIES CUDA_ARCHITECTURES "80")
+    set_target_properties(${libraryname} PROPERTIES CUDA_ARCHITECTURES "80;90")
     target_link_libraries(${libraryname} PUBLIC ${LOCAL_LIB}  ${CUDA_LIBRARIES})
 
     add_executable(${local_goal} ${LOCAL_DRIVER})
     set_target_properties(${local_goal}
                       PROPERTIES LANGUAGES CUDA LINKER_LANGUAGE CUDA)
-    set_target_properties("${local_goal}" PROPERTIES CUDA_ARCHITECTURES "80")
+    set_target_properties("${local_goal}" PROPERTIES CUDA_ARCHITECTURES "80;90")
     set_target_properties(${local_goal} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 
 
@@ -80,7 +80,7 @@ endfunction()
 
 
 mylib("${type}_ebisu" "${CMAKE_SOURCE_DIR}/j3d-temporal.cu" "${DEFAULT_COMPILER_FLAG}  ")
-set_target_properties("${type}_ebisu" PROPERTIES CUDA_ARCHITECTURES "80")
+set_target_properties("${type}_ebisu" PROPERTIES CUDA_ARCHITECTURES "80;90")
 
 subcompile(${type} "${DEFAULT_COMPILER_FLAG}  -D__PRINT__" "EBISU" SOURCE "${CMAKE_SOURCE_DIR}/j3d.cu" DRIVER "${CMAKE_SOURCE_DIR}/j3d.driver.cpp" LIB "${type}_ebisu" )
 

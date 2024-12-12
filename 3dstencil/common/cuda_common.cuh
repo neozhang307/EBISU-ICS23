@@ -8,7 +8,9 @@
 #ifndef __CUDA_ARCH__
     #define PERKS_ARCH 000
 #else
-    #if __CUDA_ARCH__==800
+    #if __CUDA_ARCH__==900
+        #define PERKS_ARCH 900
+    #elif __CUDA_ARCH__==800
         #define PERKS_ARCH 800
     #elif __CUDA_ARCH__==700
         #define PERKS_ARCH 700
@@ -18,6 +20,7 @@
         #error "unsupport"
     #endif
 #endif
+
 
 
 #include <cooperative_groups/memcpy_async.h>
