@@ -38,10 +38,21 @@ void getExperimentSetting(int *iteration, int *height, int *widthy, int *widthx,
   int TSTEP = timesteps<HALO, curshape, ITEM_PER_THREAD, REAL>::val;
   int TILE_X = ipts<HALO, curshape, REAL>::tile_x;
   int TILE_Y = ipts<HALO, curshape, REAL>::val * bdimx / TILE_X;
+  int arch;
+  host_printptx(arch);
+  int basey=9;
+  if(arch==800)
+  {
+    basey=9;
+  }
+  else if(arch==900)
+  {
+    basey=11;
+  }
   iteration[0] = TSTEP;
   widthx[0] = 12 * TILE_X;
-  widthy[0] = 9 * TILE_Y;
-  height[0] = 2560;
+  widthy[0] = basey * TILE_Y;
+  height[0] = 256;
 }
 
 template void getExperimentSetting<double>(int *, int *, int *, int *, int);

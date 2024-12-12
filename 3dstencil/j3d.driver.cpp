@@ -116,7 +116,7 @@ int main(int argc, char **argv)
     }
   }
 #endif
-  if (argc >= 3)
+  if (argc > 3)
   {
     width_x = atoi(argv[1]);
     width_y = atoi(argv[2]);
