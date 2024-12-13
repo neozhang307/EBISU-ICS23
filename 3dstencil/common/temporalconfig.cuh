@@ -31,6 +31,7 @@ struct timesteps<halo,shape,ipt,double>
 template<>
 struct timesteps< 1,  star_shape,  4,  double>
 {
+  // static int const val = 1;
   static int const val = 3;
   // static int const val = 8;
 };
@@ -39,6 +40,7 @@ template<>
 struct timesteps< 1,  star_shape,  8,  float>
 {
   static int const val = 8;
+  // static int const val = 2;
 };
 
 
@@ -59,15 +61,15 @@ template<>
 struct timesteps<1, box_shape,  4,  double>
 {
   // static int const val = 5;
-  static int const val = 3;
+  // static int const val = 3;
   // static int const val = 1;
-  // static int const val = 2;
+  static int const val = 1;
 };
 
 template<>
 struct timesteps< 1,  box_shape,  8,  float>
 {
-  static int const val = 6;
+  static int const val = 2;
 };
 
 template<>

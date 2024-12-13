@@ -103,7 +103,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;
                                 width_z, width_y, width_x);
       }
 
-      // might not be ble to unroll
+      // might not be able to unroll
       REAL sum[MQSIZE][LOCAL_ITEM_PER_THREAD];
 
       _Pragma("unroll") for (int step = 1; step < MQSIZE; step++)
@@ -132,7 +132,7 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;
      
       // PERKS-like handling tb dependency
        //   // south
-       if (tid_y == 0)
+      if (tid_y == 0)
       {
         _Pragma("unroll") for (int step = 1; step < MQSIZE; step++)
         {
