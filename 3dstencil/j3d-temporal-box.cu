@@ -73,29 +73,43 @@ kernel3d_temporal(REAL * __restrict__ input,
 
   {
     {
-      smEnqueueAsync<REAL, halo>(sm_mque +SIZEOFSM - SMQUESIZE,
-                                ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
-                                input,
-                                p_z-(QUESIZE)*(MQSIZE-1)-halo, p_y, p_x,
-                                width_z, width_y, width_x);
-      __pipeline_wait_prior(0);                  
-      __syncthreads();
-      _Pragma("unroll")
-      for(int l_z=0; l_z<halo ; l_z++)
-      {
-        regEnqueue<REAL, REG_Y_SIZE_MOD, 2*halo+1>(reg_mque[l_z+SIZEOFREG-(REGQUESIZE)],
-                    sm_mque[l_z+SIZEOFSM-(SMQUESIZE)], ps_y-halo+index_y, ps_x+ tid_x-halo, tile_y_with_halo, tile_x_with_halo);
-      }
-      __syncthreads();
-
-      smEnqueueAsync<REAL, halo+1>(sm_mque +SIZEOFSM - SMQUESIZE,
-                                ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
-                                input,
-                                p_z-(QUESIZE)*(MQSIZE-1), p_y, p_x,
-                                width_z, width_y, width_x);
-      __pipeline_wait_prior(0);                  
-      __syncthreads();
-      for(int global_z=p_z-(QUESIZE)*(MQSIZE-1); global_z<p_z_end+(QUESIZE)*(MQSIZE-1); global_z+=1)
+      // smEnqueueAsync<REAL, halo>(sm_mque +SIZEOFSM - SMQUESIZE,
+      //                           ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
+      //                           input,
+      //                           p_z-(QUESIZE)*(MQSIZE-1)-halo, p_y, p_x,
+      //                           width_z, width_y, width_x);
+      // __pipeline_wait_prior(0);                  
+      // __syncthreads();
+      // _Pragma("unroll")
+      // for(int l_z=0; l_z<halo ; l_z++)
+      // {
+      //   regEnqueue<REAL, REG_Y_SIZE_MOD, 2*halo+1>(reg_mque[l_z+SIZEOFREG-(REGQUESIZE)],
+      //               sm_mque[l_z+SIZEOFSM-(SMQUESIZE)], ps_y-halo+index_y, ps_x+ tid_x-halo, tile_y_with_halo, tile_x_with_halo);
+      // }
+      // __syncthreads();
+      // if(threadIdx.x==0&&blockIdx.x==0&&blockIdx.y==0&&blockIdx.z==0)
+      // {
+      //   printf("reg_mque[0][0][0]=%f, reg_mque[0][0][1]=%f, reg_mque[0][0][2]=%f\n",reg_mque[0][0][0],reg_mque[0][0][1],reg_mque[0][0][2]);
+      //   printf("reg_mque[1][0][0]=%f, reg_mque[1][0][1]=%f, reg_mque[1][0][2]=%f\n",reg_mque[1][0][0],reg_mque[1][0][1],reg_mque[1][0][2]);
+      //   printf("sm_mque[0][0][3]=%f, sm_mque[1][0][3]=%f, sm_mque[2][0][3]=%f\n",sm_mque[0][3],sm_mque[1][3],sm_mque[2][3]);
+      // }
+      /*
+      slice of global [p_z-(QUESIZE halo+1)*(MQSIZE-1)] () -> sm_mque [SIZEOFSM - SMQUESIZE (2halo+1)] push slice to the end of shared memory queue)
+      */
+      // smEnqueueAsync<REAL, halo+1>(sm_mque +SIZEOFSM - SMQUESIZE,
+      //                           ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
+      //                           input,
+      //                           p_z-(QUESIZE)*(MQSIZE-1)-2*halo, p_y, p_x,
+      //                           width_z, width_y, width_x);
+      // __pipeline_wait_prior(0);                  
+      // __syncthreads();
+      // if(threadIdx.x==0&&blockIdx.x==0&&blockIdx.y==0&&blockIdx.z==0)
+      // {
+      //   printf("reg_mque[0][0][0]=%f, reg_mque[0][0][1]=%f, reg_mque[0][0][2]=%f\n",reg_mque[0][0][0],reg_mque[0][0][1],reg_mque[0][0][2]);
+      //   printf("reg_mque[1][0][0]=%f, reg_mque[1][0][1]=%f, reg_mque[1][0][2]=%f\n",reg_mque[1][0][0],reg_mque[1][0][1],reg_mque[1][0][2]);
+      //   printf("::%d::sm_mque[0][0][3]=%f, sm_mque[1][0][3]=%f, sm_mque[2][0][3]=%f\n",p_z-(QUESIZE)*(MQSIZE-1)+halo,sm_mque[0][3],sm_mque[1][3],sm_mque[2][3]);
+      // }
+      for(int global_z=p_z-(QUESIZE)*max(1,(MQSIZE-1))-halo; global_z<p_z_end+(QUESIZE)*(MQSIZE-1); global_z+=1)
       {
         if(global_z<p_z_end+(QUESIZE)*(MQSIZE-1))
         {
@@ -178,7 +192,15 @@ kernel3d_temporal(REAL * __restrict__ input,
         
         //star version can use multi-buffer to remove the necessarity of two sync
         // // reg 2 ptr
-        int global_z2=global_z-(QUESIZE)*(MQSIZE-1);
+        int global_z2=global_z-(QUESIZE)*((MQSIZE-1));
+        // if(threadIdx.x==0&&blockIdx.x==0&&blockIdx.y==0&&blockIdx.z==0)
+        // {
+        //   printf("reg_mque[0][0][0]=%f, reg_mque[0][0][1]=%f, reg_mque[0][0][2]=%f\n",reg_mque[0][0][0],reg_mque[0][0][1],reg_mque[0][0][2]);
+        //   printf("reg_mque[1][0][0]=%f, reg_mque[1][0][1]=%f, reg_mque[1][0][2]=%f\n",reg_mque[1][0][0],reg_mque[1][0][1],reg_mque[1][0][2]);
+        //   // printf("reg_mque[1][0][0]=%f, reg_mque[1][0][1]=%f, reg_mque[1][0][2]=%f\n",reg_mque[2][0][0],reg_mque[2][0][1],reg_mque[2][0][2]);
+        //   printf("sm_mque[0][0][3]=%f, sm_mque[1][0][3]=%f, sm_mque[2][0][3]=%f\n",sm_mque[0][3],sm_mque[1][3],sm_mque[2][3]);
+        //   printf("global_z=%d, global_z2=%d, sum=%f\n",global_z,global_z2,sum[1]);
+        // }
         if (global_z2 >= p_z && global_z2 < p_z_end && global_z2 < width_z)
         {
           store<REAL, LOCAL_ITEM_PER_THREAD>(output,
