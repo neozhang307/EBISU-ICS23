@@ -77,21 +77,21 @@ static constexpr int const REG_Y_SIZE_MOD = LOCAL_ITEM_PER_THREAD;
 
   cg::grid_group gg = cg::this_grid();
   {
-    // int p_y = p_y;
-    smEnqueueAsync<REAL, 1 + halo>(sm_mque + SIZEOFSM - 1 - SMQUESIZE,
-                                   ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
-                                   input,
-                                   p_z - (QUESIZE) * (MQSIZE - 1), p_y, p_x,
-                                   width_z, width_y, width_x);
+    // // int p_y = p_y;
+    // smEnqueueAsync<REAL, 1 + halo>(sm_mque + SIZEOFSM - 1 - SMQUESIZE,
+    //                                ps_y, ps_x, tile_x_with_halo, tile_y_with_halo,
+    //                                input,
+    //                                p_z - (QUESIZE) * (MQSIZE - 1), p_y, p_x,
+    //                                width_z, width_y, width_x);
 
-    regEnqueues<REAL, halo, LOCAL_ITEM_PER_THREAD>(reg_mque,
-                                                   input,
-                                                   p_z -  (QUESIZE) * (MQSIZE - 1) - halo, index_y + p_y, p_x + tid_x,
-                                                   width_z, width_y, width_x);
-    __pipeline_wait_prior(0);
-    __syncthreads();
+    // regEnqueues<REAL, halo, LOCAL_ITEM_PER_THREAD>(reg_mque,
+    //                                                input,
+    //                                                p_z -  (QUESIZE) * (MQSIZE - 1) - halo, index_y + p_y, p_x + tid_x,
+    //                                                width_z, width_y, width_x);
+    // __pipeline_wait_prior(0);
+    // __syncthreads();
 
-    for (int global_z = p_z -  (QUESIZE) * (MQSIZE - 1); global_z < p_z_end + (QUESIZE) * (MQSIZE - 1); global_z += 1)
+    for (int global_z = p_z -  (QUESIZE) * max(1,(MQSIZE - 1))-halo-1; global_z < p_z_end + (QUESIZE) * (MQSIZE - 1); global_z += 1)
     {
       // preload next step / next QUEUE TILE 
       if (global_z < p_z_end +  (QUESIZE) * (MQSIZE - 1))
