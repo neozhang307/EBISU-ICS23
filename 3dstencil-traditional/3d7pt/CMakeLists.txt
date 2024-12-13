@@ -28,7 +28,7 @@ target_link_libraries(${reference_goal} PUBLIC
 set_target_properties(${reference_goal} PROPERTIES
                             COMPILE_FLAGS " -DREFCHECK ")     
                             
-set_target_properties("${reference_goal}" PROPERTIES CUDA_ARCHITECTURES "80")
+set_target_properties("${reference_goal}" PROPERTIES CUDA_ARCHITECTURES "80;90")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -77,7 +77,7 @@ function(subcompile prefix default_compiler_flag aim)
     add_library(${libraryname} ${LOCAL_SOURCE})
     set_target_properties(${libraryname} PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
     set_target_properties(${libraryname} PROPERTIES COMPILE_FLAGS "${local_compiler_flag} ")
-    set_target_properties(${libraryname} PROPERTIES CUDA_ARCHITECTURES "80")
+    set_target_properties(${libraryname} PROPERTIES CUDA_ARCHITECTURES "80;90")
     target_link_libraries(${libraryname} PUBLIC ${LOCAL_LIB}  ${CUDA_LIBRARIES})
 
     #add_library(${libraryname} ${CMAKE_SOURCE_DIR}/jacobi-star.cu)
@@ -86,7 +86,7 @@ function(subcompile prefix default_compiler_flag aim)
     # message("CHECK is ${CUDA_LIBRARIES}")
     set_target_properties(${local_goal}
                       PROPERTIES LANGUAGES CUDA LINKER_LANGUAGE CUDA)
-    set_target_properties("${local_goal}" PROPERTIES CUDA_ARCHITECTURES "80")
+    set_target_properties("${local_goal}" PROPERTIES CUDA_ARCHITECTURES "80;90")
     # set_target_properties(${local_goal} PROPERTIES COMPILE_FLAGS "${local_compiler_flag}")
    # set_target_properties(${local_goal} PROPERTIES COMPILE_FLAGS "${local_compiler_flag}")
     #add_executable(${local_goal} ${CMAKE_SOURCE_DIR}/jacobi.driver.cpp)

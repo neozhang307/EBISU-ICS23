@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
   bool isExpriment=false;
   int iteration=3;
   int warmupiteration=-1;
-  if (argc >= 3) {
+  if (argc > 3) {
     height = atoi(argv[1]);
     width_y = atoi(argv[2]);
     width_x = atoi(argv[3]);

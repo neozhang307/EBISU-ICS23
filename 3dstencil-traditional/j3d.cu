@@ -131,27 +131,25 @@ template int getMinWidthY<double> (int, int, int, bool);
 
 template<class REAL>void getExperimentSetting(int* iteration, int*height,int*widthy, int*widthx,int bdimx)
 {
-#if defined( TRATEMPORAL) 
+  int arch;
+  host_printptx(arch);
+  int basey=9;
+  if(arch==800)
+  {
+    basey=9;
+  }
+  else if(arch==900)
+  {
+    basey=11;
+  }
+
   int TSTEP=timesteps<HALO, curshape,  ITEM_PER_THREAD,  REAL>::val;
   int TILE_X=ipts<HALO,curshape,REAL>::tile_x;
   int TILE_Y=ipts<HALO,curshape,REAL>::val*bdimx/TILE_X;
     iteration[0]=TSTEP;
     widthx[0]=12*(TILE_X-2*TSTEP*HALO);
-    widthy[0]=9*(TILE_Y-2*TSTEP*HALO);
+    widthy[0]=basey*(TILE_Y-2*TSTEP*HALO);
     height[0]=2560;
-    
-#elif defined( TEMPORAL) 
-  int TSTEP=timesteps<HALO, curshape,  ITEM_PER_THREAD,  REAL>::val;
-  int TILE_X=ipts<HALO,curshape,REAL>::tile_x;
-  int TILE_Y=ipts<HALO,curshape,REAL>::val*bdimx/TILE_X;
-    iteration[0]=TSTEP;
-    widthx[0]=12*(TILE_X);
-    widthy[0]=9*(TILE_);
-    height[0]=2560;
-#else
-    iteration[0]=1;
-    height[0]=widthy[0]=widthx[0]=256;
-#endif  
 }
 template void getExperimentSetting<double>(int*,int*,int*,int*,int);
 template void getExperimentSetting<float> (int*,int*,int*,int*,int);
@@ -172,7 +170,6 @@ int j3d_iterative(REAL * h_input,
 {
 
 #if defined(TEMPORAL)||defined(TRATEMPORAL)
-  // int TSTEP=8;
   int TSTEP=timesteps<HALO, curshape,  ITEM_PER_THREAD,  REAL>::val;
   int TEMPSTEP=TSTEP;
 #else
@@ -180,7 +177,6 @@ int j3d_iterative(REAL * h_input,
 
 #endif
 
-  // const int LOCAL_ITEM_PER_THREAD=isDoubleTile?ITEM_PER_THREAD*2:ITEM_PER_THREAD;
   const int LOCAL_ITEM_PER_THREAD=ITEM_PER_THREAD;
   global_bdimx=global_bdimx==128?128:256;
   if(isDoubleTile)
@@ -190,34 +186,22 @@ int j3d_iterative(REAL * h_input,
   }
   #if defined(TEMPORAL)||defined(TRATEMPORAL)
     int TILE_X=ipts<HALO,curshape,REAL>::tile_x;
-    // printf("<%d>\n",TILE_X);
   #endif
   int TILE_Y = LOCAL_ITEM_PER_THREAD*global_bdimx/TILE_X;
-  // printf("<%d,%d,%d>",LOCAL_ITEM_PER_THREAD,global_bdimx,TILE_X);
   assert(TILE_Y<=TILE_X);
   if(blkpsm<=0)blkpsm=100;
-  // int iteration=4;
-/* Host allocation Begin */
+
   int sm_count;
   cudaDeviceGetAttribute ( &sm_count, cudaDevAttrMultiProcessorCount,0 );
 #ifndef __PRINT__
   printf("sm_count is %d\n",sm_count);
 #endif
-  // printf("sm_count is %d\n",sm_count);
   int ptx;
   host_printptx(ptx);
 #ifndef __PRINT__
-  // printf("code is run in %d\n",ptx);
 #endif
-#ifdef NAIVE
-  auto execute_kernel = kernel3d_restrict<REAL,HALO>;
-#endif 
-#if defined(BASELINE) ||defined(BASELINE_CM)
-  auto execute_kernel = isDoubleTile?(global_bdimx==128? kernel3d_baseline<REAL,HALO,2*ITEM_PER_THREAD,TILE_X,128>
-                              :kernel3d_baseline<REAL,HALO,2*ITEM_PER_THREAD,TILE_X,256>):
-   (global_bdimx==128? kernel3d_baseline<REAL,HALO,ITEM_PER_THREAD,TILE_X,128>
-                              :kernel3d_baseline<REAL,HALO,ITEM_PER_THREAD,TILE_X,256>);
-#endif
+
+
 #ifdef PERSISTENT
   auto execute_kernel = isDoubleTile?(global_bdimx==128?kernel3d_persistent<REAL,HALO,2*ITEM_PER_THREAD,TILE_X,128>
                               :kernel3d_persistent<REAL,HALO,2*ITEM_PER_THREAD,TILE_X,256>):
@@ -225,18 +209,9 @@ int j3d_iterative(REAL * h_input,
                               :kernel3d_persistent<REAL,HALO,ITEM_PER_THREAD,TILE_X,256>);
 #endif
 
-#if defined(TEMPORAL)
-  // auto execute_kernel =         (global_bdimx==128?kernel3d_temporal<REAL,HALO,ITEM_PER_THREAD,TILE_X,128>
-  //                             :kernel3d_temporal<REAL,HALO,ITEM_PER_THREAD,TILE_X,256>);
-  auto execute_kernel =         (kernel3d_temporal<REAL,HALO,256>);
 
-#endif
-#if defined(TRATEMPORAL)
-  // auto execute_kernel =         (global_bdimx==128?kernel3d_temporal<REAL,HALO,ITEM_PER_THREAD,TILE_X,128>
-  //                             :kernel3d_temporal<REAL,HALO,ITEM_PER_THREAD,TILE_X,256>);
   auto execute_kernel =         (kernel3d_temporal_traditional<REAL,HALO,256>);
 
-#endif
 
                  
 //shared memory related 
@@ -254,52 +229,15 @@ size_t executeSM=0;
     executeSM=basic_sm_space;
     // printf("size of sm is %d\n",basic_sm_space);
 #endif
-// printf("sm is %ld\n",executeSM);
-// #if defined(GEN) || defined(MIX)
-    // int sharememory1 = basic_sm_space+2*BD_STEP_XY*FOLDER_Z*sizeof(REAL);
-    // int sharememory2 = sharememory1 + sizeof(REAL) * (SFOLDER_Z)*(TILE_Y*2-1)*TILE_X;
-// #endif
 
 
-    // return 0;
-//shared memory related 
-#ifdef USEMAXSM
   int maxSharedMemory;
   cudaDeviceGetAttribute (&maxSharedMemory, cudaDevAttrMaxSharedMemoryPerMultiprocessor,0 );
   int SharedMemoryUsed=maxSharedMemory-1024;
   cudaFuncSetAttribute(execute_kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, SharedMemoryUsed);
-#endif 
 
-#ifdef NAIVE
-  dim3 block_dim_1(global_bdimx, 4, 1);
-  dim3 grid_dim_1(width_x/global_bdimx, width_y/4, height);
 
-  dim3 executeBlockDim=block_dim_1;
-  dim3 executeGridDim=grid_dim_1;
 
-#endif
-#ifdef BASELINE
-
-  dim3 block_dim_2(global_bdimx, 1, 1);
-  dim3 grid_dim_2(width_x/TILE_X, width_y/TILE_Y, max(1, min(height/(2*HALO+1), max(2,(sm_count*8)*TILE_X*TILE_Y/width_x/width_y))));
-  // printf("<<%d,%d,%d>>\n",grid_dim_2.x,grid_dim_2.y,grid_dim_2.z);
-    // if(executeGridDim.z*(2*HALO+1)>=height)return -4;
-
-  // dim3 block_dim3(TILE_X, 1, 1);
-  // dim3 grid_dim3(MIN(width_x*width_y/TILE_X/TILE_Y,sm_count*numBlocksPerSm_current), 1, sm_count*numBlocksPerSm_current/MIN(width_x*width_y/TILE_X/TILE_Y,sm_count*numBlocksPerSm_current));
-  
-  dim3 executeBlockDim=block_dim_2;
-  dim3 executeGridDim=grid_dim_2;
-#endif
-// #ifdef BASELINE_MEMWARP
-//   dim3 block_dim_2(bdimx+2*TILE_X, 1, 1);
-//   dim3 grid_dim_2(width_x/TILE_X, width_y/TILE_Y,max(2,(sm_count*8)*TILE_X*TILE_Y/width_x/width_y));
-//   // dim3 block_dim3(TILE_X, 1, 1);
-//   // dim3 grid_dim3(MIN(width_x*width_y/TILE_X/TILE_Y,sm_count*numBlocksPerSm_current), 1, sm_count*numBlocksPerSm_current/MIN(width_x*width_y/TILE_X/TILE_Y,sm_count*numBlocksPerSm_current));
-  
-//   dim3 executeBlockDim=block_dim_2;
-//   dim3 executeGridDim=grid_dim_2;
-// #endif
 
 #ifdef PERSISTENTLAUNCH
   int max_sm_flder=0;
@@ -335,56 +273,15 @@ size_t executeSM=0;
   int gimx = (width_x+valid_dimx-1)/(valid_dimx);
   int gimy = (width_y+valid_dimy-1)/(valid_dimy);
   dim3 grid_dim_3(gimx, gimy, MIN(height, MAX(1,sm_count*numBlocksPerSm_current/gimy/gimx)));
-  // printf("valid dim:(%d,%d)with tstep %d\n",valid_dimx,valid_dimy,TSTEP);
-  // // printf("blk per sm is %d/%d\n", numBlocksPerSm_current,blkpsm);
-  // printf("grid is (%d,%d,%d)\n", grid_dim_3.x, grid_dim_3.y, grid_dim_3.z);
-  // // dim3 grid_dim(width_x/bdimx,sm_count*numBlocksPerSm_current/(width_x/bdimx));
-  // dim3 grid_dim_3((width_x)/TILE_X, width_y/TILE_Y, MIN(height, MAX(1,sm_count*numBlocksPerSm_current/(width_y/TILE_Y*(width_x)/(TILE_X)))));
 #endif
   dim3 executeBlockDim=block_dim_3;
   dim3 executeGridDim=grid_dim_3;
 
   if(numBlocksPerSm_current==0)return -3;
-  // printf("plckpersm is %d\n", numBlocksPerSm_current);
-  // printf("<%d,%d,%d>\n",grid_dim_3.x, grid_dim_3.y, grid_dim_3.z);
-  // printf("plckpersm is %f\n", (double)executeSM);
 #endif
-  // printf("<%d,%d>\n",TILE_X,TILE_Y);
-  // return 0;
   int minHeight=0;
-#if defined(GEN)||defined(GENWR)
 
-  // 
-  // printf("%d\n",numBlocksPerSm_current);
-  int perSMUsable=SharedMemoryUsed/numBlocksPerSm_current;
-  int perSMValsRemaind=(perSMUsable-basic_sm_space)/sizeof(REAL);
-  int reg_boundary=reg_folder_z*2*HALO*(TILE_Y+TILE_X+2*isBOX);
-  max_sm_flder=(perSMValsRemaind-reg_boundary)/(2*HALO*(TILE_Y+TILE_X+2*isBOX)+TILE_X*TILE_Y);
-  // printf(">>%ld,%ld\n",perSMUsable/1024,perSMValsRemaind/1024);
-  // printf(">>%ld,%ld\n",(perSMValsRemaind-reg_boundary),(2*HALO*(TILE_Y+TILE_X*2*isBOX)+TILE_X*TILE_Y));
-  // printf(">>%ld\n",(max_sm_flder*(2*HALO*(TILE_Y+TILE_X*2*isBOX)+TILE_X*TILE_Y))*sizeof(REAL)/1024);
-   // return 0;
-  if(!useSM)max_sm_flder=0;
-  if(useSM&&max_sm_flder==0)return -1;
-
-
-  int sharememory1 = 2*HALO*(TILE_Y+TILE_X+2*isBOX)*(max_sm_flder+reg_folder_z)*sizeof(REAL);//boundary
-  int sharememory2 = sharememory1 + sizeof(REAL) * (max_sm_flder)*(TILE_Y)*TILE_X;
-  executeSM=sharememory2+basic_sm_space;
-  
-  minHeight=(max_sm_flder+reg_folder_z+2*NOCACHE_Z)*executeGridDim.z;
-
-  // printf("numblkpsm is %ld\n",numBlocksPerSm_current);
-  // printf("smfolder is %ld\n",max_sm_flder);
-  // printf("SM is %ld/%ld KB\n",executeSM/1024,SharedMemoryUsed/1024);
-#endif
-
-  // if(executeGridDim.x*executeGridDim.y*executeGridDim.z<sm_count)return -2;
   if(executeGridDim.z*(2*HALO+1)>height)return -4;
-  // if(max_sm_flder+reg_folder_z<2*halo)return -4;
-  
-  // printf("<%d,%d,%d>",executeGridDim.x,executeGridDim.y,executeGridDim.z);
-
 
   if(getminHeight)return (minHeight);
 
@@ -425,8 +322,6 @@ size_t executeSM=0;
   cudaMalloc(&l2_cache,L2_utage);
   REAL * l2_cache1=l2_cache;
   REAL * l2_cache2=l2_cache+(TSTEP*executeGridDim.z*executeGridDim.y*HALO*width_x*2+TSTEP*executeGridDim.x*executeGridDim.z*HALO*width_y);
-  // cudaMalloc(&l2_cache1,L2_utage);
-  // cudaMalloc(&l2_cache2,L2_utage);
 
   // REAL l2perused;
   size_t inner_window_size = 30*1024*1024;
@@ -598,7 +493,7 @@ cudaDeviceSynchronize();
 #endif
 #else
   // h y x iter TILEX thready=1 gridx gridy latency speed 
-  printf("%d\t%d\t",ptx,sizeof(REAL)/4);
+  printf("%d\t%d\t",ptx,(int)sizeof(REAL)/4);
   printf("%d\t%d\t%d\t%d\t",height,width_y,width_x,iteration); 
   printf("%d\t%d\t<%d,%d,%d>\t%d\t%d\t",executeBlockDim.x,LOCAL_ITEM_PER_THREAD,
         executeGridDim.x,executeGridDim.y,executeGridDim.z,sm_count,
@@ -629,18 +524,8 @@ cudaDeviceSynchronize();
     cudaMemcpy(__var_0__, input, sizeof(REAL)*height*width_x*width_y, cudaMemcpyDeviceToHost);
   }
 #else
-  // #ifdef TEMPORAL
-  // if(iteration%(TEMPSTEP*2)==TEMPSTEP)  
-  // {
-  //   cudaMemcpy(__var_0__, __var_2__, sizeof(REAL)*height*width_x*width_y, cudaMemcpyDeviceToHost);
-  // }
-  // else
-  // {
-  //   cudaMemcpy(__var_0__, input, sizeof(REAL)*height*width_x*width_y, cudaMemcpyDeviceToHost);
-  // }
-  // #else
+
   cudaMemcpy(__var_0__, __var_2__, sizeof(REAL)*height*width_x*width_y, cudaMemcpyDeviceToHost);
-  // #endif
 #endif
   cudaDeviceSynchronize();
   cudaCheckError();
